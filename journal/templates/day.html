@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal — {{ date }} · Dana's Trading Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blush:     #F5C8D6;
+            --blush-mid: #E89BB5;
+            --rose:      #C94E6E;
+            --rose-deep: #A8324F;
+            --gold:      #C9A96E;
+            --gold-light:#F0DFB8;
+            --cream:     #FDF0F3;
+            --text:      #2A1A1F;
+            --text-soft: #7A4A5C;
+            --white:     #FFFFFF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Top Bar ── */
+        .topbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--blush);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .topbar-brand em { font-style: italic; color: var(--rose-deep); }
+
+        .topbar-date {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-style: italic;
+            color: var(--text-soft);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-soft);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid var(--blush-mid);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover { background: var(--blush); color: var(--rose-deep); border-color: var(--rose); }
+
+        /* ── Page ── */
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 48px 80px;
+        }
+
+        /* ── Section title ── */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--blush-mid);
+        }
+
+        .section-title .pill {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            background: var(--blush);
+            color: var(--rose-deep);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-weight: 500;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--white);
+            border-radius: 24px;
+            border: 1px solid var(--blush);
+            padding: 28px 32px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title span { color: var(--rose-deep); }
+
+        /* ── Trade Table ── */
+        .trades-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        thead tr {
+            background: var(--blush);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-soft);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--blush);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .side-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .side-long { background: #D4EDE4; color: #2D7A5F; }
+        .side-short { background: var(--blush); color: var(--rose-deep); }
+
+        .pnl-pos { color: #2D7A5F; font-weight: 600; }
+        .pnl-neg { color: var(--rose-deep); font-weight: 600; }
+
+        .autoliq-badge {
+            font-size: 9px;
+            background: #FFF3CD;
+            color: #856404;
+            padding: 2px 7px;
+            border-radius: 50px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* Per-trade journal row */
+        .trade-detail-row td {
+            background: #FFFAF8;
+            padding: 16px 16px 20px;
+            border-bottom: 1px solid var(--blush-mid);
+        }
+
+        .trade-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .trade-checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        /* ── Form inputs ── */
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            background: var(--cream);
+            border: 1px solid var(--blush-mid);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--rose);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(201,86,110,0.08);
+        }
+
+        textarea { resize: vertical; }
+
+        label.field-label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-soft);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .field { margin-bottom: 0; }
+
+        /* ── Checkbox ── */
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--blush);
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--white);
+            font-size: 13px;
+            color: var(--text);
+            user-select: none;
+        }
+
+        .check-item:hover { background: var(--blush); border-color: var(--rose); }
+
+        .check-item input[type="checkbox"] {
+            width: 16px; height: 16px;
+            accent-color: var(--rose-deep);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        /* inline small checks used inside trade rows */
+        .mini-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-soft);
+            cursor: pointer;
+            padding: 5px 10px;
+            background: var(--cream);
+            border: 1px solid var(--blush-mid);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .mini-check:hover { border-color: var(--rose); color: var(--rose-deep); }
+        .mini-check input { accent-color: var(--rose-deep); width: 13px; height: 13px; }
+
+        /* ── Grid layouts ── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+        /* ── Bias buttons ── */
+        .bias-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bias-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
+            border: 2px solid var(--blush-mid);
+            background: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            color: var(--text-soft);
+        }
+
+        .bias-btn:hover { border-color: var(--rose); color: var(--rose-deep); }
+        .bias-btn.selected-bullish { background: #D4EDE4; border-color: #2D7A5F; color: #2D7A5F; }
+        .bias-btn.selected-bearish { background: var(--blush); border-color: var(--rose-deep); color: var(--rose-deep); }
+        .bias-btn.selected-range { background: var(--gold-light); border-color: var(--gold); color: #7A5A1A; }
+
+        input[name="session_bias"] { display: none; }
+
+        /* ── Emotion sliders ── */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: var(--text-soft);
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--rose-deep);
+            height: 4px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .slider-val {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--rose-deep);
+            width: 28px;
+            text-align: right;
+        }
+
+        /* ── Save button ── */
+        .save-btn {
+            width: 100%;
+            background: var(--text);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 16px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.02em;
+            margin-top: 8px;
+        }
+
+        .save-btn:hover {
+            background: var(--rose-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(201,86,110,0.3);
+        }
+
+        /* ── Two col layout ── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+            .page { padding: 24px; }
+            .topbar { padding: 0 24px; }
+        }
+
+        /* ── Trade Grade ── */
+        .grade-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .grade-btn {
+            flex: 1;
+            min-width: 36px;
+            padding: 8px 4px;
+            border-radius: 10px;
+            border: 1.5px solid var(--blush-mid);
+            background: var(--white);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-soft);
+            text-align: center;
+        }
+
+        .grade-btn:hover {
+            border-color: var(--rose);
+            color: var(--rose-deep);
+            background: var(--blush);
+        }
+
+        .grade-selected {
+            background: var(--rose-deep) !important;
+            border-color: var(--rose-deep) !important;
+            color: white !important;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: var(--blush);
+            margin: 24px 0;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--blush-mid); border-radius: 3px; }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .card { animation: fadeUp 0.4s ease both; }
+        .card:nth-child(1) { animation-delay: 0.05s; }
+        .card:nth-child(2) { animation-delay: 0.10s; }
+        .card:nth-child(3) { animation-delay: 0.15s; }
+        .card:nth-child(4) { animation-delay: 0.20s; }
+    </style>
+</head>
+
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+    <div style="display:flex;flex-direction:column;line-height:1.2;">
+        <a href="/" class="topbar-brand">Dana's <em style="font-style:italic;color:var(--rose-deep);">Trading Journal</em></a>
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:var(--gold);font-weight:600;margin-top:3px;">God · Patience · Discipline</span>
+    </div>
+    <span class="topbar-date">{{ date|date:"l, F j, Y" }}</span>
+    <a href="/" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Calendar
+    </a>
+</div>
+
+<div class="page">
+
+    <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- ══════════════════════════════════════
+         SECTION 1 — TRADE LOG
+    ══════════════════════════════════════ -->
+    <div class="section-title">
+        <span class="pill">01</span>
+        Trade Log
+    </div>
+
+    <div class="card">
+        <div class="trades-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Symbol</th>
+                        <th>Side</th>
+                        <th>Qty</th>
+                        <th>Entry</th>
+                        <th>Exit</th>
+                        <th>P&amp;L</th>
+                        <th>Entry Time</th>
+                        <th>Exit Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trade in trades %}
+                    <tr>
+                        <td style="color:var(--text-soft);font-size:12px;">{{ forloop.counter }}</td>
+                        <td><strong>{{ trade.symbol }}</strong>{% if trade.is_auto_liq %}<span class="autoliq-badge">AUTO-LIQ</span>{% endif %}</td>
+                        <td>
+                            <span class="side-badge {% if trade.side == 'B' %}side-long{% else %}side-short{% endif %}">
+                                {% if trade.side == 'B' %}LONG{% else %}SHORT{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ trade.quantity }}</td>
+                        <td style="font-variant-numeric:tabular-nums;">{{ trade.entry_price }}</td>
+                        <td style="font-variant-numeric:tabular-nums;">{{ trade.exit_price }}</td>
+                        <td class="{% if trade.pnl > 0 %}pnl-pos{% else %}pnl-neg{% endif %}" style="font-variant-numeric:tabular-nums;">
+                            {% if trade.pnl > 0 %}+{% endif %}${{ trade.pnl|floatformat:2 }}
+                        </td>
+                        <td style="font-size:12px;color:var(--text-soft);">{{ trade.entry_time|time:"g:i A" }}</td>
+                        <td style="font-size:12px;color:var(--text-soft);">{{ trade.exit_time|time:"g:i A" }}</td>
+                    </tr>
+
+                    <!-- Per-trade journal row -->
+                    <tr class="trade-detail-row">
+                        <td colspan="9">
+                            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold);font-weight:600;margin-bottom:12px;">
+                                Trade #{{ forloop.counter }} — Journal Details
+                            </div>
+
+                            <!-- Checklist -->
+                            <div class="trade-checks">
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_is_a_plus" {% if trade.is_a_plus %}checked{% endif %}>
+                                    A+ Setup
+                                </label>
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_htf_confirmation" {% if trade.htf_confirmation %}checked{% endif %}>
+                                    HTF Confirmation
+                                </label>
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_displacement" {% if trade.displacement %}checked{% endif %}>
+                                    Displacement
+                                </label>
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_fresh_ifvg" {% if trade.fresh_ifvg %}checked{% endif %}>
+                                    Fresh IFVG
+                                </label>
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_entry_fill_50" {% if trade.entry_fill_50 %}checked{% endif %}>
+                                    50% Entry Fill
+                                </label>
+                                <label class="mini-check">
+                                    <input type="checkbox" name="trade_{{ trade.id }}_ignition_move" {% if trade.ignition_move %}checked{% endif %}>
+                                    🔥 Ignition Move
+                                </label>
+                            </div>
+
+                            <!-- Fields -->
+                            <div class="trade-detail-grid">
+                                <div class="field">
+                                    <label class="field-label">Stop (pts)</label>
+                                    <input type="number" step="any" name="trade_{{ trade.id }}_stop_points" value="{{ trade.stop_points }}" placeholder="e.g. 30">
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Target (pts)</label>
+                                    <input type="number" step="any" name="trade_{{ trade.id }}_target_points" value="{{ trade.target_points }}" placeholder="e.g. 58">
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Risk per Trade ($)</label>
+                                    <input type="number" step="any" name="trade_{{ trade.id }}_risk_per_trade" value="{{ trade.risk_per_trade }}" placeholder="e.g. 50.00">
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Result</label>
+                                    <select name="trade_{{ trade.id }}_result">
+                                        <option value="">—</option>
+                                        <option value="WIN"  {% if trade.result == "WIN" %}selected{% endif %}>✅ Win</option>
+                                        <option value="LOSS" {% if trade.result == "LOSS" %}selected{% endif %}>❌ Loss</option>
+                                        <option value="BE"   {% if trade.result == "BE" %}selected{% endif %}>➖ Break Even</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Trade Grade</label>
+                                    <div class="grade-group" id="gradeGroup_{{ trade.id }}">
+                                        {% for g in grade_choices %}
+                                        <button type="button"
+                                            class="grade-btn {% if trade.trade_grade == g %}grade-selected{% endif %}"
+                                            data-trade="{{ trade.id }}"
+                                            data-val="{{ g }}"
+                                            onclick="setGrade('{{ trade.id }}', '{{ g }}')">{{ g }}</button>
+                                        {% endfor %}
+                                    </div>
+                                    <input type="hidden" name="trade_{{ trade.id }}_trade_grade" id="tradeGrade_{{ trade.id }}" value="{{ trade.trade_grade }}">
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Strategy / Setup Type</label>
+                                    <select name="trade_{{ trade.id }}_strategy_setup">
+                                        <option value="">— Select —</option>
+                                        <option value="ignition"              {% if trade.strategy_setup == "ignition" %}selected{% endif %}>🔥 Ignition</option>
+                                        <option value="vwap_rejection"        {% if trade.strategy_setup == "vwap_rejection" %}selected{% endif %}>VWAP Rejection</option>
+                                        <option value="momentum_continuation" {% if trade.strategy_setup == "momentum_continuation" %}selected{% endif %}>Momentum Continuation</option>
+                                        <option value="opening_drive"         {% if trade.strategy_setup == "opening_drive" %}selected{% endif %}>Opening Drive</option>
+                                        <option value="liquidity_sweep"       {% if trade.strategy_setup == "liquidity_sweep" %}selected{% endif %}>Liquidity Sweep</option>
+                                        <option value="ifvg"                  {% if trade.strategy_setup == "ifvg" %}selected{% endif %}>IFVG</option>
+                                        <option value="fvg"                   {% if trade.strategy_setup == "fvg" %}selected{% endif %}>FVG</option>
+                                        <option value="ob"                    {% if trade.strategy_setup == "ob" %}selected{% endif %}>Order Block</option>
+                                        <option value="bos"                   {% if trade.strategy_setup == "bos" %}selected{% endif %}>Break of Structure</option>
+                                        <option value="vwap"                  {% if trade.strategy_setup == "vwap" %}selected{% endif %}>VWAP Reclaim</option>
+                                        <option value="other"                 {% if trade.strategy_setup == "other" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Time of Day</label>
+                                    <select name="trade_{{ trade.id }}_time_of_day_category">
+                                        <option value="">— Select —</option>
+                                        <option value="open"        {% if trade.time_of_day_category == "open" %}selected{% endif %}>Open (9:30–10:00)</option>
+                                        <option value="mid_morning" {% if trade.time_of_day_category == "mid_morning" %}selected{% endif %}>Mid-Morning (10:00–11:30)</option>
+                                        <option value="lunch"       {% if trade.time_of_day_category == "lunch" %}selected{% endif %}>Lunch (11:30–13:00)</option>
+                                        <option value="afternoon"   {% if trade.time_of_day_category == "afternoon" %}selected{% endif %}>Afternoon (13:00–15:30)</option>
+                                        <option value="close"       {% if trade.time_of_day_category == "close" %}selected{% endif %}>Close (15:30–16:00)</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Emotion</label>
+                                    <input type="text" name="trade_{{ trade.id }}_emotion" value="{{ trade.emotion }}" placeholder="Confident, FOMO…">
+                                </div>
+                            </div>
+
+                            <div class="field" style="margin-bottom:12px;">
+                                <label class="field-label">Trade Notes</label>
+                                <textarea name="trade_{{ trade.id }}_trade_notes" rows="2" placeholder="Setup reasoning, execution notes…">{{ trade.trade_notes }}</textarea>
+                            </div>
+
+                            <!-- Screenshot -->
+                            <div class="field">
+                                <label class="field-label">Chart Screenshot</label>
+                                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                                    <input type="file" name="trade_{{ trade.id }}_screenshot" accept="image/*"
+                                           style="font-size:12px;padding:6px 10px;width:auto;">
+                                    <input type="text" name="trade_{{ trade.id }}_screenshot_caption"
+                                           placeholder="Caption (e.g. Entry on 2M FVG)"
+                                           style="flex:1;min-width:180px;">
+                                </div>
+                                {% for ss in trade.screenshots.all %}
+                                <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
+                                    <img src="{{ ss.image.url }}" style="height:60px;border-radius:8px;border:1px solid var(--blush-mid);">
+                                    <span style="font-size:12px;color:var(--text-soft);">{{ ss.caption }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align:center;padding:40px;color:var(--text-soft);font-style:italic;">
+                            No trades imported for this day
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    {% if show_journal %}
+    <!-- ══════════════════════════════════════
+         SECTION 2 — PRE-TRADE PREP
+    ══════════════════════════════════════ -->
+    <div class="section-title" style="margin-top:40px;">
+        <span class="pill">02</span>
+        Pre-Trade Prep
+    </div>
+
+    <div class="two-col">
+
+        <!-- Left: Bias + HTF Reasoning + Key Levels -->
+        <div>
+
+            <!-- Session Bias -->
+            <div class="card">
+                <div class="card-title">Session Bias</div>
+                <div class="bias-group" id="biasGroup">
+                    <button type="button" class="bias-btn" data-val="bullish" onclick="setBias('bullish')">🚀 Bullish</button>
+                    <button type="button" class="bias-btn" data-val="bearish" onclick="setBias('bearish')">📉 Bearish</button>
+                    <button type="button" class="bias-btn" data-val="range" onclick="setBias('range')">🦀 Range</button>
+                </div>
+                <input type="hidden" name="session_bias" id="sessionBiasInput" value="{{ journal.session_bias }}">
+
+                <div style="margin-top:16px;">
+                    <label class="field-label">A+ Setup Today?</label>
+                    <label class="check-item">
+                        <input type="checkbox" name="a_plus_setup" {% if journal.a_plus_setup %}checked{% endif %}>
+                        A+ Setup Confirmed
+                    </label>
+                </div>
+            </div>
+
+            <!-- HTF Bias Reason -->
+            <div class="card">
+                <div class="card-title">HTF Bias Reasoning</div>
+                <textarea name="htf_bias_reason" rows="5"
+                    placeholder="Why this bias? Higher timeframe context, key reactions, FVGs, liquidity swept…">{{ journal.htf_bias_reason }}</textarea>
+            </div>
+
+            <!-- Key Levels -->
+            <div class="card">
+                <div class="card-title">Key Levels</div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="field-label">Globex High</label>
+                        <input type="number" step="any" name="globex_high" value="{{ journal.globex_high }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Globex Low</label>
+                        <input type="number" step="any" name="globex_low" value="{{ journal.globex_low }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Asia High</label>
+                        <input type="number" step="any" name="asia_high" value="{{ journal.asia_high }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Asia Low</label>
+                        <input type="number" step="any" name="asia_low" value="{{ journal.asia_low }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">London High</label>
+                        <input type="number" step="any" name="london_high" value="{{ journal.london_high }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">London Low</label>
+                        <input type="number" step="any" name="london_low" value="{{ journal.london_low }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Key Resistance</label>
+                        <input type="number" step="any" name="key_resistance" value="{{ journal.key_resistance }}" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Key Support</label>
+                        <input type="number" step="any" name="key_support" value="{{ journal.key_support }}" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Checklist -->
+        <div>
+            <div class="card">
+                <div class="card-title">Discipline Blueprint</div>
+
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-soft);margin-bottom:10px;">Timeframes Checked</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+                    <label class="mini-check"><input type="checkbox" name="tf_1m" {% if journal.tf_1m %}checked{% endif %}> 1m</label>
+                    <label class="mini-check"><input type="checkbox" name="tf_15m" {% if journal.tf_15m %}checked{% endif %}> 15m</label>
+                    <label class="mini-check"><input type="checkbox" name="tf_30m" {% if journal.tf_30m %}checked{% endif %}> 30m</label>
+                    <label class="mini-check"><input type="checkbox" name="tf_60m" {% if journal.tf_60m %}checked{% endif %}> 60m</label>
+                    <label class="mini-check"><input type="checkbox" name="tf_4h" {% if journal.tf_4h %}checked{% endif %}> 4h</label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-soft);margin-bottom:10px;">Setup Checklist</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label class="check-item">
+                        <input type="checkbox" name="vwap_confirmed" {% if journal.vwap_confirmed %}checked{% endif %}>
+                        VWAP Confirmed
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="ema_confluence" {% if journal.ema_confluence %}checked{% endif %}>
+                        EMA Confluence
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="sma_confluence" {% if journal.sma_confluence %}checked{% endif %}>
+                        SMA Confluence
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="trend_aligned" {% if journal.trend_aligned %}checked{% endif %}>
+                        Trend &amp; Phase Aligned
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="above_8_20_50" {% if journal.above_8_20_50 %}checked{% endif %}>
+                        Above / Below 8 · 20 · 50
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="stop_loss_placed" {% if journal.stop_loss_placed %}checked{% endif %}>
+                        Stop Loss Placed
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ══════════════════════════════════════
+         SECTION 3 — END OF DAY REVIEW
+    ══════════════════════════════════════ -->
+    <div class="section-title" style="margin-top:40px;">
+        <span class="pill">03</span>
+        End of Day Review
+    </div>
+
+    <div class="two-col">
+
+        <div>
+            <!-- How the day turned out -->
+            <div class="card">
+                <div class="card-title">How the Day Turned Out</div>
+                <textarea name="how_day_turned_out" rows="5"
+                    placeholder="Describe how the session went — what worked, what didn't, market context…">{{ journal.how_day_turned_out }}</textarea>
+            </div>
+
+            <!-- General Notes -->
+            <div class="card">
+                <div class="card-title">Session Notes</div>
+                <textarea name="notes" rows="4" placeholder="Additional thoughts…">{{ journal.notes }}</textarea>
+            </div>
+
+            <!-- Improvement -->
+            <div class="card">
+                <div class="card-title">One Improvement for Tomorrow</div>
+                <textarea name="improvement_tomorrow" rows="3"
+                    placeholder="What will you do differently?">{{ journal.improvement_tomorrow }}</textarea>
+            </div>
+        </div>
+
+        <div>
+
+            <!-- Mistake Tracker -->
+            <div class="card">
+                <div class="card-title"><span>✦</span> Mistake Tracker</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_chased" {% if journal.mistake_chased %}checked{% endif %}>
+                        Did I chase?
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_revenge" {% if journal.mistake_revenge %}checked{% endif %}>
+                        Did I revenge trade?
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_countertrend" {% if journal.mistake_countertrend %}checked{% endif %}>
+                        Did I countertrend trade?
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_broke_time_rules" {% if journal.mistake_broke_time_rules %}checked{% endif %}>
+                        Did I break time rules?
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_skipped_aplus" {% if journal.mistake_skipped_aplus %}checked{% endif %}>
+                        Did I skip an A+ out of fear?
+                    </label>
+                    <label class="check-item">
+                        <input type="checkbox" name="mistake_traded_news" {% if journal.mistake_traded_news %}checked{% endif %}>
+                        Did I trade during news?
+                    </label>
+                    <label class="check-item" style="border-color:var(--gold-light);background:var(--gold-light);">
+                        <input type="checkbox" name="followed_plan" {% if journal.followed_plan %}checked{% endif %}
+                               style="accent-color:var(--gold);">
+                        <span style="color:#7A5A1A;font-weight:500;">Did I follow my plan?</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Emotional Check-In -->
+            <div class="card">
+                <div class="card-title">Emotional Check-In</div>
+
+                <div class="slider-row">
+                    <span class="slider-label">Fear</span>
+                    <input type="range" min="1" max="10" name="emotion_fear"
+                           value="{{ journal.emotion_fear|default:5 }}"
+                           oninput="this.nextElementSibling.textContent=this.value">
+                    <span class="slider-val">{{ journal.emotion_fear|default:"5" }}</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">Confidence</span>
+                    <input type="range" min="1" max="10" name="emotion_confidence"
+                           value="{{ journal.emotion_confidence|default:5 }}"
+                           oninput="this.nextElementSibling.textContent=this.value">
+                    <span class="slider-val">{{ journal.emotion_confidence|default:"5" }}</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">Focus</span>
+                    <input type="range" min="1" max="10" name="emotion_focus"
+                           value="{{ journal.emotion_focus|default:5 }}"
+                           oninput="this.nextElementSibling.textContent=this.value">
+                    <span class="slider-val">{{ journal.emotion_focus|default:"5" }}</span>
+                </div>
+                <div class="slider-row" style="margin-bottom:20px;">
+                    <span class="slider-label">Discipline</span>
+                    <input type="range" min="1" max="10" name="emotion_discipline"
+                           value="{{ journal.emotion_discipline|default:5 }}"
+                           oninput="this.nextElementSibling.textContent=this.value">
+                    <span class="slider-val">{{ journal.emotion_discipline|default:"5" }}</span>
+                </div>
+
+                <div class="field">
+                    <label class="field-label">Dominant Emotion</label>
+                    <input type="text" name="dominant_emotion"
+                           value="{{ journal.dominant_emotion }}"
+                           placeholder="e.g. FOMO, Calm, Overconfident…">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION 4 — SESSION JOURNAL
+    ══════════════════════════════════════ -->
+    <div class="section-title" style="margin-top:40px;">
+        <span class="pill">04</span>
+        Session Journal
+    </div>
+
+    <!-- Row 1: Session Info -->
+    <div class="two-col" style="margin-bottom:24px;">
+
+        <div>
+            <!-- Session Time -->
+            <div class="card">
+                <div class="card-title"><span>🕐</span> Session Traded</div>
+                <div class="sj-session-group">
+                    <button type="button" class="sj-session-btn" data-val="asia"     onclick="setSession('asia')">🌏 Asia</button>
+                    <button type="button" class="sj-session-btn" data-val="london"   onclick="setSession('london')">🇬🇧 London</button>
+                    <button type="button" class="sj-session-btn" data-val="new_york" onclick="setSession('new_york')">🗽 New York</button>
+                    <button type="button" class="sj-session-btn" data-val="midday"   onclick="setSession('midday')">☀️ Midday</button>
+                </div>
+                <input type="hidden" name="session_time" id="sessionTimeInput" value="{{ journal.session_time }}">
+            </div>
+
+            <!-- Instruments Traded -->
+            <div class="card" style="margin-top:0;">
+                <div class="card-title"><span>📊</span> Instrument(s) Traded</div>
+                <input type="text" name="instruments_traded"
+                       value="{{ journal.instruments_traded }}"
+                       placeholder="e.g. NQ, MNQ, TSLA, SPY…">
+                <div style="font-size:11px;color:var(--text-soft);margin-top:8px;">Separate multiple instruments with a comma</div>
+            </div>
+        </div>
+
+        <div>
+            <!-- Trade Quality Rating -->
+            <div class="card">
+                <div class="card-title"><span>🏅</span> Trade Quality Rating</div>
+                <div class="sj-quality-group">
+                    <label class="sj-quality-card {% if journal.trade_quality_rating == 'A' %}sj-quality-a-selected{% endif %}">
+                        <input type="radio" name="trade_quality_rating" value="A"
+                               {% if journal.trade_quality_rating == "A" %}checked{% endif %}>
+                        <span class="sj-quality-grade">A</span>
+                        <span class="sj-quality-label">Perfect<br>discipline</span>
+                    </label>
+                    <label class="sj-quality-card {% if journal.trade_quality_rating == 'B' %}sj-quality-b-selected{% endif %}">
+                        <input type="radio" name="trade_quality_rating" value="B"
+                               {% if journal.trade_quality_rating == "B" %}checked{% endif %}>
+                        <span class="sj-quality-grade">B</span>
+                        <span class="sj-quality-label">Minor<br>mistakes</span>
+                    </label>
+                    <label class="sj-quality-card {% if journal.trade_quality_rating == 'C' %}sj-quality-c-selected{% endif %}">
+                        <input type="radio" name="trade_quality_rating" value="C"
+                               {% if journal.trade_quality_rating == "C" %}checked{% endif %}>
+                        <span class="sj-quality-grade">C</span>
+                        <span class="sj-quality-label">Emotional<br>trading</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Emotional + Behavioral -->
+    <div class="two-col" style="margin-bottom:24px;">
+
+        <div>
+            <!-- Emotional State -->
+            <div class="card">
+                <div class="card-title"><span>💭</span> Emotional State</div>
+
+                <div class="field" style="margin-bottom:16px;">
+                    <label class="field-label">Before Trading</label>
+                    <select name="emotion_before">
+                        <option value="">— Select or type below —</option>
+                        {% for val, label in emotion_choices %}
+                        <option value="{{ val }}" {% if journal.emotion_before == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="emotion_before_custom" id="emotionBeforeCustom"
+                           value="{% if journal.emotion_before and journal.emotion_before not in emotion_choice_values %}{{ journal.emotion_before }}{% endif %}"
+                           placeholder="Or describe in your own words…"
+                           style="margin-top:8px;">
+                </div>
+
+                <div class="field">
+                    <label class="field-label">After Trading</label>
+                    <select name="emotion_after">
+                        <option value="">— Select or type below —</option>
+                        {% for val, label in emotion_choices %}
+                        <option value="{{ val }}" {% if journal.emotion_after == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="emotion_after_custom" id="emotionAfterCustom"
+                           value="{% if journal.emotion_after and journal.emotion_after not in emotion_choice_values %}{{ journal.emotion_after }}{% endif %}"
+                           placeholder="Or describe in your own words…"
+                           style="margin-top:8px;">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <!-- Behavioral Accountability -->
+            <div class="card">
+                <div class="card-title"><span>✅</span> Behavioral Accountability</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+
+                    <div class="sj-yn-row">
+                        <span class="sj-yn-label">Did I follow my risk rules?</span>
+                        <div class="sj-yn-btns">
+                            <label class="sj-yn {% if journal.followed_risk_rules == True %}sj-yn-yes{% endif %}">
+                                <input type="radio" name="followed_risk_rules" value="yes"
+                                       {% if journal.followed_risk_rules == True %}checked{% endif %}> Yes
+                            </label>
+                            <label class="sj-yn {% if journal.followed_risk_rules == False %}sj-yn-no{% endif %}">
+                                <input type="radio" name="followed_risk_rules" value="no"
+                                       {% if journal.followed_risk_rules == False %}checked{% endif %}> No
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="sj-yn-row">
+                        <span class="sj-yn-label">Did I stop at max loss?</span>
+                        <div class="sj-yn-btns">
+                            <label class="sj-yn {% if journal.stopped_at_max_loss == True %}sj-yn-yes{% endif %}">
+                                <input type="radio" name="stopped_at_max_loss" value="yes"
+                                       {% if journal.stopped_at_max_loss == True %}checked{% endif %}> Yes
+                            </label>
+                            <label class="sj-yn {% if journal.stopped_at_max_loss == False %}sj-yn-no{% endif %}">
+                                <input type="radio" name="stopped_at_max_loss" value="no"
+                                       {% if journal.stopped_at_max_loss == False %}checked{% endif %}> No
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="sj-yn-row">
+                        <span class="sj-yn-label">Did I follow my trading plan?</span>
+                        <div class="sj-yn-btns">
+                            <label class="sj-yn {% if journal.followed_plan %}sj-yn-yes{% endif %}">
+                                <input type="radio" name="followed_plan_radio" value="yes"
+                                       {% if journal.followed_plan %}checked{% endif %}> Yes
+                            </label>
+                            <label class="sj-yn {% if not journal.followed_plan %}sj-yn-no{% endif %}">
+                                <input type="radio" name="followed_plan_radio" value="no"
+                                       {% if not journal.followed_plan %}checked{% endif %}> No
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Reflection -->
+    <div class="two-col" style="margin-bottom:24px;">
+
+        <div>
+            <div class="card">
+                <div class="card-title"><span>🌟</span> What Did I Do Well Today?</div>
+                <textarea name="what_did_well" rows="5"
+                    placeholder="Be specific — list setups you executed cleanly, emotional wins, discipline moments…">{{ journal.what_did_well }}</textarea>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="card-title"><span>🔍</span> What Mistakes Did I Make?</div>
+                <textarea name="mistakes_made" rows="5"
+                    placeholder="Honest reflection — what would you do differently if you could replay the session?">{{ journal.mistakes_made }}</textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Row 4: Improvement -->
+    <div class="card" style="margin-bottom:32px;">
+        <div class="card-title"><span>🎯</span> One Thing I Will Improve Tomorrow</div>
+        <textarea name="improvement_tomorrow" rows="3"
+            placeholder="One focused improvement — keep it specific and actionable…">{{ journal.improvement_tomorrow }}</textarea>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION 4 CSS (injected inline via style tag)
+    ══════════════════════════════════════ -->
+    <style>
+        /* Session time buttons */
+        .sj-session-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .sj-session-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 8px;
+            border-radius: 14px;
+            border: 2px solid var(--blush-mid);
+            background: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-soft);
+            text-align: center;
+        }
+        .sj-session-btn:hover { border-color: var(--rose); color: var(--rose-deep); }
+        .sj-session-btn.sj-active {
+            background: var(--blush);
+            border-color: var(--rose-deep);
+            color: var(--rose-deep);
+            font-weight: 600;
+        }
+
+        /* Quality rating cards */
+        .sj-quality-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .sj-quality-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 16px 8px;
+            border-radius: 16px;
+            border: 2px solid var(--blush-mid);
+            background: var(--white);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .sj-quality-card input[type="radio"] { display: none; }
+        .sj-quality-card:hover { border-color: var(--rose); }
+        .sj-quality-grade {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text-soft);
+        }
+        .sj-quality-label {
+            font-size: 11px;
+            color: var(--text-soft);
+            line-height: 1.4;
+        }
+        /* Selected states */
+        .sj-quality-a-selected { background: #D4EDE4; border-color: #2D7A5F !important; }
+        .sj-quality-a-selected .sj-quality-grade { color: #2D7A5F; }
+        .sj-quality-b-selected { background: var(--gold-light); border-color: var(--gold) !important; }
+        .sj-quality-b-selected .sj-quality-grade { color: #7A5A1A; }
+        .sj-quality-c-selected { background: var(--blush); border-color: var(--rose-deep) !important; }
+        .sj-quality-c-selected .sj-quality-grade { color: var(--rose-deep); }
+
+        /* Yes/No rows */
+        .sj-yn-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--cream);
+            border-radius: 12px;
+            gap: 12px;
+        }
+        .sj-yn-label {
+            font-size: 13px;
+            color: var(--text);
+            flex: 1;
+        }
+        .sj-yn-btns {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .sj-yn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1.5px solid var(--blush-mid);
+            background: var(--white);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s;
+            color: var(--text-soft);
+        }
+        .sj-yn input[type="radio"] { display: none; }
+        .sj-yn:hover { border-color: var(--rose); color: var(--rose-deep); }
+        .sj-yn-yes { background: #D4EDE4 !important; border-color: #2D7A5F !important; color: #2D7A5F !important; font-weight: 600 !important; }
+        .sj-yn-no  { background: var(--blush) !important; border-color: var(--rose-deep) !important; color: var(--rose-deep) !important; font-weight: 600 !important; }
+    </style>
+
+    <!-- Save -->
+    <div style="max-width:480px;margin:40px auto 0;">
+    <button type="submit" class="save-btn" {% if not is_admin %}disabled{% endif %}>
+        Save Journal Entry
+    </button>
+    {% if not is_admin %}
+    <p style="text-align:center;font-size:12px;color:var(--text-soft);margin-top:12px;font-style:italic;">
+        🔒 Only administrators can save changes
+    </p>
+    {% endif %}
+</div>
+
+    {% endif %}{# end show_journal #}
+
+    </form>
+</div>
+
+<script>
+    // Bias selector
+    const biasInput = document.getElementById('sessionBiasInput');
+
+    function setBias(val) {
+        biasInput.value = val;
+        document.querySelectorAll('.bias-btn').forEach(b => {
+            b.className = 'bias-btn';
+            if (b.dataset.val === val) b.classList.add('selected-' + val);
+        });
+    }
+
+    // Init bias on load
+    (function() {
+        const v = biasInput.value;
+        if (v) setBias(v);
+    })();
+
+    // Trade Grade selector
+    function setGrade(tradeId, val) {
+        // Update hidden input
+        document.getElementById('tradeGrade_' + tradeId).value = val;
+        // Update button states
+        document.querySelectorAll(`.grade-btn[data-trade="${tradeId}"]`).forEach(btn => {
+            btn.classList.toggle('grade-selected', btn.dataset.val === val);
+        });
+    }
+
+    // ── Section 4: Session time selector ────────────────────────────
+    const sessionTimeInput = document.getElementById('sessionTimeInput');
+
+    function setSession(val) {
+        sessionTimeInput.value = val;
+        document.querySelectorAll('.sj-session-btn').forEach(b => {
+            b.classList.toggle('sj-active', b.dataset.val === val);
+        });
+    }
+
+    // Init session on load
+    (function() {
+        const v = sessionTimeInput ? sessionTimeInput.value : '';
+        if (v) setSession(v);
+    })();
+
+    // ── Section 4: Quality rating visual feedback ────────────────────
+    document.querySelectorAll('.sj-quality-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const val = this.querySelector('input[type="radio"]').value;
+            document.querySelectorAll('.sj-quality-card').forEach(c => {
+                c.classList.remove('sj-quality-a-selected','sj-quality-b-selected','sj-quality-c-selected');
+            });
+            if (val === 'A') this.classList.add('sj-quality-a-selected');
+            if (val === 'B') this.classList.add('sj-quality-b-selected');
+            if (val === 'C') this.classList.add('sj-quality-c-selected');
+        });
+    });
+
+    // ── Section 4: Yes/No visual feedback ───────────────────────────
+    document.querySelectorAll('.sj-yn input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const name = this.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                r.closest('.sj-yn').classList.remove('sj-yn-yes','sj-yn-no');
+            });
+            const lbl = this.closest('.sj-yn');
+            if (this.value === 'yes') lbl.classList.add('sj-yn-yes');
+            if (this.value === 'no')  lbl.classList.add('sj-yn-no');
+        });
+    });
+
+    // ── Section 4: Emotion custom field merging ──────────────────────
+    // If user types in the custom field, override the select value on submit
+    document.querySelector('form').addEventListener('submit', function() {
+        ['before','after'].forEach(dir => {
+            const custom = document.getElementById('emotionBefore' === `emotion${dir.charAt(0).toUpperCase()+dir.slice(1)}Custom` 
+                ? 'emotionBeforeCustom' : `emotion${dir.charAt(0).toUpperCase()+dir.slice(1)}Custom`);
+            const sel = document.querySelector(`select[name="emotion_${dir}"]`);
+            // handled server-side — no action needed
+        });
+    });
+</script>
+
+</body>
+</html>

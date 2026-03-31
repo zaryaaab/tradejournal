@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics — Dana's Trading Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink:       #D96B8A;
+            --pink-light: #EFA8BC;
+            --pink-soft:  #F5C8D6;
+            --pink-mid:   #C94E6E;
+            --pink-deep:  #A8324F;
+            --gold:       #D4A96A;
+            --cream:      #FDF0F3;
+            --white:      #FFFFFF;
+            --text:       #3A2030;
+            --text-soft:  #7A4A5C;
+            --green:      #5DB882;
+            --green-bg:   #EAF7EF;
+            --red:        #E07070;
+            --red-bg:     #FDEAEA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            display: flex;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -120px; right: -120px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(244,167,185,0.22) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -80px; left: 180px;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(244,167,185,0.13) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Sidebar ─────────────────────────────────────────────── */
+        .sidebar {
+            width: 248px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            flex-shrink: 0;
+            background: var(--white);
+            border-right: 1.5px solid var(--pink-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: -60px;
+            width: 220px; height: 220px;
+            background: radial-gradient(circle, var(--pink-soft) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .logo {
+            padding: 32px 24px 24px;
+            border-bottom: 1.5px solid var(--pink-light);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(217,107,138,0.28);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.01em;
+            line-height: 1.15;
+        }
+
+        .logo-name em { font-style: italic; color: var(--pink-deep); }
+
+        .logo-tagline {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .nav { padding: 20px 12px; flex: 1; position: relative; z-index: 1; }
+
+        .nav-section-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--pink);
+            font-weight: 600;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-soft);
+            text-decoration: none;
+            transition: all 0.22s;
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--pink-soft) 0%, rgba(244,167,185,0.18) 100%);
+            color: var(--pink-deep);
+            font-weight: 600;
+        }
+
+        .nav-item:hover:not(.active) {
+            background: var(--pink-soft);
+            color: var(--pink-mid);
+        }
+
+        .nav-icon {
+            width: 17px; height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .active-dot {
+            width: 6px; height: 6px;
+            background: var(--pink-deep);
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: var(--pink-light);
+            margin: 12px 4px;
+            opacity: 0.5;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 4px;
+        }
+
+        .nav-user-avatar {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .nav-user-info { overflow: hidden; }
+
+        .nav-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-user-role {
+            font-size: 10px;
+            color: var(--pink);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 600;
+        }
+
+        .nav-logout {
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-soft);
+            text-align: left;
+        }
+
+        .nav-logout:hover {
+            background: #FDE8ED !important;
+            color: var(--pink-deep) !important;
+        }
+
+        .sidebar-stats {
+            padding: 0 14px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 18px;
+            padding: 18px 20px;
+            border: 1.5px solid var(--pink-light);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(244,167,185,0.22);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 90px; height: 90px;
+            background: radial-gradient(circle, var(--pink-soft) 0%, transparent 70%);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-soft);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .stat-value.stat-pos { color: var(--green); }
+        .stat-value.stat-neg { color: var(--red); }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 9px;
+            font-size: 10px;
+            color: var(--text-soft);
+            background: var(--pink-soft);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* ── Main ─────────────────────────────────────────────────── */
+        .main {
+            flex: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 40px 44px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main::-webkit-scrollbar { width: 5px; }
+        .main::-webkit-scrollbar-track { background: transparent; }
+        .main::-webkit-scrollbar-thumb { background: var(--pink-light); border-radius: 3px; }
+
+        /* ── Page header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .header-left h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 44px;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .header-left h1 em { font-style: italic; color: var(--pink-deep); }
+
+        .header-subtitle {
+            font-size: 12.5px;
+            color: var(--text-soft);
+            margin-top: 7px;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-subtitle::before { content: '✦'; color: var(--pink); font-size: 9px; }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            margin-top: 36px;
+            animation: fadeUp 0.4s ease 0.08s both;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-style: italic;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--pink-light), transparent);
+        }
+
+        /* ── Metric cards ── */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            animation: fadeUp 0.4s ease 0.06s both;
+        }
+
+        .metric-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+            animation: fadeUp 0.4s ease 0.1s both;
+        }
+
+        .metric-card {
+            background: var(--white);
+            border: 1.5px solid var(--pink-light);
+            border-radius: 22px;
+            padding: 22px 24px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(217,107,138,0.14);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 90px; height: 90px;
+            background: radial-gradient(circle, var(--pink-soft) 0%, transparent 70%);
+        }
+
+        .metric-card-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-soft);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .metric-card-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .metric-card-value.pos { color: var(--green); }
+        .metric-card-value.neg { color: var(--red); }
+
+        .metric-card-sub {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 8px;
+        }
+
+        .metric-card-sub .pos { color: var(--green); font-weight: 600; }
+        .metric-card-sub .neg { color: var(--red);   font-weight: 600; }
+
+        /* ── Win/loss bar ── */
+        .split-bar-wrap { margin-top: 10px; }
+
+        .split-bar {
+            height: 6px;
+            border-radius: 99px;
+            background: var(--red-bg);
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .split-bar-fill {
+            height: 100%;
+            background: var(--green);
+            border-radius: 99px;
+        }
+
+        .split-bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .split-bar-labels .w { color: var(--green); font-weight: 700; }
+        .split-bar-labels .l { color: var(--red);   font-weight: 700; }
+
+        /* ── Best / worst day rows ── */
+        .day-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 12px;
+        }
+
+        .day-row.best  { background: var(--green-bg); }
+        .day-row.worst { background: var(--red-bg); margin-top: 8px; }
+
+        .day-row-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-soft);
+        }
+
+        .day-row-date  { font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px; }
+
+        .day-row-pnl {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .day-row.best  .day-row-pnl { color: var(--green); }
+        .day-row.worst .day-row-pnl { color: var(--red); }
+
+        /* ── Table card ── */
+        .table-card {
+            background: var(--white);
+            border: 1.5px solid var(--pink-light);
+            border-radius: 22px;
+            overflow: hidden;
+            animation: fadeUp 0.4s ease 0.12s both;
+        }
+
+        .table-card-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--pink-soft);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .table-card-title em { font-style: italic; color: var(--pink-deep); }
+
+        .table-card-badge {
+            font-size: 10px;
+            background: var(--pink-soft);
+            color: var(--pink-deep);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead tr { background: var(--cream); }
+
+        th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-soft);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--pink-soft);
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #FFF8FA; }
+
+        .td-pos { color: var(--green); font-weight: 700; }
+        .td-neg { color: var(--red);   font-weight: 700; }
+
+        /* ── Inline bar ── */
+        .inline-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inline-bar {
+            flex: 1;
+            max-width: 120px;
+            height: 5px;
+            background: var(--pink-soft);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .inline-bar-fill {
+            height: 100%;
+            background: var(--green);
+            border-radius: 99px;
+        }
+
+        .inline-bar-fill.low { background: var(--red); }
+
+        /* ── Grade badges ── */
+        .grade-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 17px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .gb-Aplus { background: #D4EDE4; color: #1A6B3A; }
+        .gb-A     { background: #EAF7EF; color: #2D7A5F; }
+        .gb-B     { background: #FEF9EC; color: #7A5A1A; }
+        .gb-C     { background: var(--pink-soft); color: var(--pink-deep); }
+        .gb-F     { background: var(--red-bg);    color: var(--red); }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .empty-icon  { font-size: 52px; margin-bottom: 20px; display: block; }
+
+        .empty-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .empty-title em { font-style: italic; color: var(--pink-deep); }
+
+        .empty-sub {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.6;
+            max-width: 360px;
+            margin: 0 auto 28px;
+        }
+
+        .import-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--pink-deep);
+            color: white;
+            padding: 13px 28px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: all 0.25s;
+            box-shadow: 0 6px 18px rgba(168,50,79,0.25);
+        }
+
+        .import-btn:hover {
+            background: var(--pink-mid);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(168,50,79,0.32);
+        }
+
+        .no-data-note {
+            text-align: center;
+            padding: 36px;
+            color: var(--text-soft);
+            font-style: italic;
+            font-size: 13.5px;
+            background: var(--white);
+            border: 1.5px solid var(--pink-light);
+            border-radius: 22px;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-4px); }
+        }
+
+        @media (max-width: 1100px) {
+            .metric-grid   { grid-template-columns: repeat(2, 1fr); }
+            .metric-grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────── -->
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">🌸</div>
+        <div class="logo-name">Dana's <em>Trading</em> Journal</div>
+        <div class="logo-tagline">God · Patience · Discipline</div>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-section-label">Menu</div>
+
+        <a href="/" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendar
+        </a>
+
+        <a href="/upload/" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import Trades
+        </a>
+
+        <a href="/analytics/" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Analytics
+            <span class="active-dot"></span>
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-user">
+            <div class="nav-user-avatar">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+            <div class="nav-user-info">
+                <div class="nav-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="nav-user-role">{{ request.user.profile.get_role_display|default:"Client" }}</div>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="nav-item nav-logout">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+            </button>
+        </form>
+    </nav>
+
+    <div class="sidebar-stats">
+        <div class="stat-card">
+            <div class="stat-label">Total P&amp;L</div>
+            <div class="stat-value {% if not no_data and total_pnl > 0 %}stat-pos{% elif not no_data and total_pnl < 0 %}stat-neg{% endif %}">
+                {% if not no_data %}{% if total_pnl > 0 %}+{% endif %}${{ total_pnl|floatformat:0 }}{% else %}—{% endif %}
+            </div>
+            <div class="stat-badge">📊 all time</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value">
+                {% if not no_data %}{{ win_rate }}%{% else %}—{% endif %}
+            </div>
+            <div class="stat-badge">🎯 of trades</div>
+        </div>
+    </div>
+</aside>
+
+<!-- ── Main ─────────────────────────────────────────────────────── -->
+<main class="main">
+
+    <div class="header">
+        <div class="header-left">
+            <h1>Trade <em>Analytics</em></h1>
+            <div class="header-subtitle">Performance breakdown across all imported trades</div>
+        </div>
+    </div>
+
+    {% if no_data %}
+
+    <!-- Empty state -->
+    <div class="empty-state">
+        <span class="empty-icon">📭</span>
+        <div class="empty-title">No <em>trades</em> yet</div>
+        <p class="empty-sub">Import your broker CSV to start seeing performance analytics, setup breakdowns, and trade grade analysis.</p>
+        <a href="/upload/" class="import-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Import CSV
+        </a>
+    </div>
+
+    {% else %}
+
+    <!-- ═══════════════════════════════════════
+         SECTION 1 — OVERVIEW
+    ═══════════════════════════════════════ -->
+    <div class="section-header" style="margin-top:0;">
+        <div class="section-title">Overview</div>
+        <div class="section-line"></div>
+    </div>
+
+    <!-- Row 1: 4 cards -->
+    <div class="metric-grid">
+
+        <div class="metric-card">
+            <div class="metric-card-label">Total P&amp;L</div>
+            <div class="metric-card-value {% if total_pnl > 0 %}pos{% elif total_pnl < 0 %}neg{% endif %}">
+                {% if total_pnl > 0 %}+{% endif %}${{ total_pnl|floatformat:2 }}
+            </div>
+            {% if total_return is not None %}
+            <div class="metric-card-sub">
+                Return:
+                <span class="{% if total_return > 0 %}pos{% else %}neg{% endif %}">
+                    {% if total_return > 0 %}+{% endif %}{{ total_return }}%
+                </span>
+                on ${{ account_balance|floatformat:0 }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-card-label">Win Rate</div>
+            <div class="metric-card-value">{{ win_rate }}%</div>
+            <div class="split-bar-wrap">
+                <div class="split-bar">
+                    <div class="split-bar-fill" style="width:{{ win_rate }}%;"></div>
+                </div>
+                <div class="split-bar-labels">
+                    <span class="w">{{ win_count }} Wins</span>
+                    <span class="l">{{ loss_count }} Losses</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-card-label">Avg Win</div>
+            <div class="metric-card-value pos">+${{ avg_win|floatformat:2 }}</div>
+            <div class="metric-card-sub">per winning trade</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-card-label">Avg Loss</div>
+            <div class="metric-card-value neg">${{ avg_loss|floatformat:2 }}</div>
+            <div class="metric-card-sub">per losing trade</div>
+        </div>
+
+    </div>
+
+    <!-- Row 2: 3 cards -->
+    <div class="metric-grid-3">
+
+        <div class="metric-card">
+            <div class="metric-card-label">Total Trades</div>
+            <div class="metric-card-value">{{ total_trades }}</div>
+            <div class="metric-card-sub">all imported trades</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-card-label">Profit Factor</div>
+            <div class="metric-card-value {% if profit_factor and profit_factor >= 1 %}pos{% elif profit_factor %}neg{% endif %}">
+                {% if profit_factor is not None %}{{ profit_factor }}{% else %}—{% endif %}
+            </div>
+            <div class="metric-card-sub">gross profit ÷ gross loss</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-card-label">Best &amp; Worst Day</div>
+            {% if best_day %}
+            <div class="day-row best">
+                <div>
+                    <div class="day-row-label">Best Day</div>
+                    <div class="day-row-date">{{ best_day.date }}</div>
+                </div>
+                <div class="day-row-pnl">+${{ best_day.day_pnl|floatformat:0 }}</div>
+            </div>
+            {% endif %}
+            {% if worst_day %}
+            <div class="day-row worst">
+                <div>
+                    <div class="day-row-label">Worst Day</div>
+                    <div class="day-row-date">{{ worst_day.date }}</div>
+                </div>
+                <div class="day-row-pnl">${{ worst_day.day_pnl|floatformat:0 }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 2 — PERFORMANCE BY SETUP TYPE
+    ═══════════════════════════════════════ -->
+    <div class="section-header">
+        <div class="section-title">Performance by Setup Type</div>
+        <div class="section-line"></div>
+    </div>
+
+    {% if setup_stats %}
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-card-title">Setup <em>Breakdown</em></div>
+            <span class="table-card-badge">{{ setup_stats|length }} setup{{ setup_stats|length|pluralize }} tracked</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Setup Type</th>
+                    <th>Trades</th>
+                    <th>Total P&amp;L</th>
+                    <th>Avg P&amp;L / Trade</th>
+                    <th>Win Rate</th>
+                    <th style="min-width:150px;">Win Rate Bar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in setup_stats %}
+                <tr>
+                    <td><strong>{{ s.label }}</strong></td>
+                    <td style="color:var(--text-soft);">{{ s.count }}</td>
+                    <td class="{% if s.total_pnl >= 0 %}td-pos{% else %}td-neg{% endif %}">
+                        {% if s.total_pnl > 0 %}+{% endif %}${{ s.total_pnl|floatformat:2 }}
+                    </td>
+                    <td class="{% if s.avg_pnl >= 0 %}td-pos{% else %}td-neg{% endif %}">
+                        {% if s.avg_pnl > 0 %}+{% endif %}${{ s.avg_pnl|floatformat:2 }}
+                    </td>
+                    <td><strong>{{ s.win_rate }}%</strong></td>
+                    <td>
+                        <div class="inline-bar-wrap">
+                            <div class="inline-bar">
+                                <div class="inline-bar-fill {% if s.win_rate < 50 %}low{% endif %}"
+                                     style="width:{{ s.win_rate }}%;"></div>
+                            </div>
+                            <span style="font-size:11px;color:var(--text-soft);min-width:36px;">{{ s.win_rate }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data-note">No setup types tagged yet — assign setups from the day view to see breakdowns here.</div>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════════
+         SECTION 3 — PERFORMANCE BY TRADE GRADE
+    ═══════════════════════════════════════ -->
+    <div class="section-header">
+        <div class="section-title">Performance by Trade Grade</div>
+        <div class="section-line"></div>
+    </div>
+
+    {% if grade_stats %}
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-card-title">Grade <em>Analysis</em></div>
+            <span class="table-card-badge">Process over outcome</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Grade</th>
+                    <th>Trades</th>
+                    <th>Total P&amp;L</th>
+                    <th>Win Rate</th>
+                    <th style="min-width:150px;">Win Rate Bar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grade_stats %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span class="grade-badge
+                                {% if g.label == 'A+' %}gb-Aplus
+                                {% elif g.label == 'A' %}gb-A
+                                {% elif g.label == 'B' %}gb-B
+                                {% elif g.label == 'C' %}gb-C
+                                {% else %}gb-F{% endif %}">{{ g.label }}</span>
+                            <span style="font-size:12px;color:var(--text-soft);">
+                                {% if g.label == "A+" %}Perfect execution
+                                {% elif g.label == "A" %}Solid trade
+                                {% elif g.label == "B" %}Minor issues
+                                {% elif g.label == "C" %}Emotional trade
+                                {% else %}Rule break{% endif %}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="color:var(--text-soft);">{{ g.count }}</td>
+                    <td class="{% if g.total_pnl >= 0 %}td-pos{% else %}td-neg{% endif %}">
+                        {% if g.total_pnl > 0 %}+{% endif %}${{ g.total_pnl|floatformat:2 }}
+                    </td>
+                    <td><strong>{{ g.win_rate }}%</strong></td>
+                    <td>
+                        <div class="inline-bar-wrap">
+                            <div class="inline-bar">
+                                <div class="inline-bar-fill {% if g.win_rate < 50 %}low{% endif %}"
+                                     style="width:{{ g.win_rate }}%;"></div>
+                            </div>
+                            <span style="font-size:11px;color:var(--text-soft);min-width:36px;">{{ g.win_rate }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data-note">No trade grades assigned yet — grade your trades from the day view to see analysis here.</div>
+    {% endif %}
+
+    {% endif %}{# end no_data #}
+
+</main>
+
+</body>
+</html>

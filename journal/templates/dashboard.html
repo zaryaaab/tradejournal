@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dana's Trading Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink:       #D96B8A;
+            --pink-light: #EFA8BC;
+            --pink-soft:  #F5C8D6;
+            --pink-mid:   #C94E6E;
+            --pink-deep:  #A8324F;
+            --gold:       #D4A96A;
+            --cream:      #FDF0F3;
+            --white:      #FFFFFF;
+            --text:       #3A2030;
+            --text-soft:  #7A4A5C;
+            --green:      #5DB882;
+            --red:        #E07070;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            display: flex;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -120px; right: -120px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(244,167,185,0.22) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -80px; left: 180px;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(244,167,185,0.13) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+
+
+        /* Ensure sidebar uses flex column */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Push bottom section down */
+        .nav {
+            flex: 1;
+        }
+
+
+        /* Bottom container */
+        .sidebar-bottom {
+            padding: 14px;
+            border-top: 1.5px solid var(--pink-light);
+            background: var(--white);
+        }
+
+        /* Optional spacing polish */
+        .sidebar-bottom .nav-user {
+            margin-bottom: 10px;
+        }
+        .sidebar-bottom {
+            background: var(--white);
+            backdrop-filter: none !important;
+        }
+
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 248px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            flex-shrink: 0;
+            background: var(--white);
+            border-right: 1.5px solid var(--pink-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+
+
+        .logo {
+            padding: 32px 24px 24px;
+            border-bottom: 1.5px solid var(--pink-light);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(217,107,138,0.28);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.01em;
+            line-height: 1.15;
+        }
+
+        .logo-name em { font-style: italic; color: var(--pink-deep); }
+
+        .logo-tagline {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .nav { padding: 20px 12px; flex: 1; position: relative; z-index: 1; }
+
+        .nav-section-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--pink);
+            font-weight: 600;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-soft);
+            text-decoration: none;
+            transition: all 0.22s;
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--pink-soft) 0%, rgba(244,167,185,0.18) 100%);
+            color: var(--pink-deep);
+            font-weight: 600;
+        }
+
+        .nav-item:hover:not(.active) {
+            background: var(--pink-soft);
+            color: var(--pink-mid);
+        }
+
+        .nav-icon {
+            width: 17px; height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .active-dot {
+            width: 6px; height: 6px;
+            background: var(--pink-deep);
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        /* ── Nav divider ── */
+        .nav-divider {
+            height: 1px;
+            background: var(--pink-light);
+            margin: 12px 4px;
+            opacity: 0.5;
+        }
+
+        /* ── User pill ── */
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 4px;
+        }
+
+        .nav-user-avatar {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .nav-user-info { overflow: hidden; }
+
+        .nav-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-user-role {
+            font-size: 10px;
+            color: var(--pink);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 600;
+        }
+
+        /* ── Logout button ── */
+        .nav-logout {
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-soft);
+            text-align: left;
+        }
+
+        .nav-logout:hover {
+            background: #FDE8ED !important;
+            color: var(--pink-deep) !important;
+        }
+
+        /* ── Sidebar Stats ── */
+        .sidebar-stats {
+            padding: 0 14px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.85); /* Slightly transparent to let sidebar glow through */
+            backdrop-filter: blur(8px);
+            border-radius: 18px;
+            padding: 18px 20px;
+            border: 1.5px solid var(--pink-light);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card {
+        background: var(--white);
+        /* backdrop-filter removed */
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(244,167,185,0.22);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 90px; height: 90px;
+            background: radial-gradient(circle, var(--pink-soft) 0%, transparent 70%);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-soft);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px; /* Downsized slightly for sidebar */
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .stat-value.stat-pos { color: var(--green); }
+        .stat-value.stat-neg { color: var(--red); }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 9px;
+            font-size: 10px;
+            color: var(--text-soft);
+            background: var(--pink-soft);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* ── Main ── */
+        .main {
+            flex: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 40px 44px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main::-webkit-scrollbar { width: 5px; }
+        .main::-webkit-scrollbar-track { background: transparent; }
+        .main::-webkit-scrollbar-thumb { background: var(--pink-light); border-radius: 3px; }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .header-left h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 44px;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .header-left h1 em { font-style: italic; color: var(--pink-deep); }
+
+        .header-subtitle {
+            font-size: 12.5px;
+            color: var(--text-soft);
+            margin-top: 7px;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-subtitle::before { content: '✦'; color: var(--pink); font-size: 9px; }
+
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--pink-deep);
+            color: white;
+            padding: 12px 22px;
+            border-radius: 50px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: all 0.25s;
+            flex-shrink: 0;
+            box-shadow: 0 6px 18px rgba(217,107,138,0.3);
+        }
+
+        .upload-btn:hover {
+            background: var(--pink-mid);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(217,107,138,0.36);
+        }
+
+        /* ── Month Navigation ── */
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .month-nav a {
+            text-decoration: none;
+            color: var(--pink-deep);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: var(--white);
+            border: 1.5px solid var(--pink-light);
+            transition: all 0.2s;
+        }
+
+        .month-nav a:hover {
+            background: var(--pink-soft);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217,107,138,0.2);
+        }
+
+        .month-nav h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            color: var(--text);
+            margin: 0;
+        }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            animation: fadeUp 0.4s ease 0.08s both;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-style: italic;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--pink-light), transparent);
+        }
+
+        /* ── Calendar ── */
+        .calendar-wrap {
+            background: #1E1E1E;
+            border-radius: 28px;
+            border: 1px solid #333;
+            overflow: hidden;
+            box-shadow: 0 8px 48px rgba(0,0,0,0.2);
+            animation: fadeUp 0.4s ease 0.12s both;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #1E1E1E;
+            padding: 14px 0;
+        }
+
+        .cal-dow {
+            text-align: center;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #2C2C2C;
+            padding: 2px;
+        }
+
+        .cal-day {
+            background: #3A3A3A;
+            /* Increased min-height slightly since it has more vertical room now */
+            min-height: 130px; 
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: #999;
+            transition: filter 0.18s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cal-day:hover { filter: brightness(1.12); z-index: 2; }
+        .cal-day.other-month { background: #2A2A2A; }
+        .cal-day.other-month .day-num { color: #555; }
+        .cal-day.win-strong { background: #1A6B3A; color: white; }
+        .cal-day.win-light  { background: #2E7D52; color: white; }
+        .cal-day.loss       { background: #C0392B; color: white; }
+        .cal-day.win-strong:hover,
+        .cal-day.win-light:hover,
+        .cal-day.loss:hover { filter: brightness(1.1); }
+
+        .day-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1;
+            color: inherit;
+        }
+
+        .day-pnl {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .day-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(0,0,0,0.14);
+            border-radius: 8px;
+            padding: 5px 8px;
+        }
+
+        .day-meta-item { text-align: center; }
+        .day-meta-val { font-weight: 700; font-size: 11px; display: block; }
+
+        .day-empty-icon {
+            position: absolute;
+            bottom: 8px; right: 8px;
+            font-size: 20px;
+            opacity: 0.05;
+        }
+
+        /* ── Daily % display on calendar cell ── */
+        .day-pnl-pct {
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* ── Monthly Summary Bar ── */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+            animation: fadeUp 0.4s ease 0.04s both;
+        }
+
+        .summary-card {
+            background: white;
+            border: 1.5px solid var(--pink-light);
+            border-radius: 18px;
+            padding: 16px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217,107,138,0.15);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: -16px; right: -16px;
+            width: 70px; height: 70px;
+            background: radial-gradient(circle, var(--pink-soft) 0%, transparent 70%);
+        }
+
+        .summary-card-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-soft);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .summary-card-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .summary-card-value.pos { color: var(--green); }
+        .summary-card-value.neg { color: var(--red); }
+
+        .summary-card-sub {
+            font-size: 10px;
+            color: var(--text-soft);
+            margin-top: 5px;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">🌸</div>
+        <div class="logo-name">Dana's <em>Trading</em> Journal</div>
+        <div class="logo-tagline">God · Patience · Discipline</div>
+    </div>
+
+    <!-- NAV (Top Section) -->
+    <nav class="nav">
+        <div class="nav-section-label">Menu</div>
+
+        <a href="/" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Calendar
+            <span class="active-dot"></span>
+        </a>
+
+        <a href="/upload/" class="nav-item {% if not is_admin and not is_assistant %}disabled-link{% endif %}"
+           {% if not is_admin and not is_assistant %}onclick="return false;" style="opacity:0.5;pointer-events:none;"{% endif %}>
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Import Trades
+            {% if not is_admin and not is_assistant %}
+                <span style="margin-left:auto;font-size:8px;color:var(--text-soft);">(client)</span>
+            {% endif %}
+        </a>
+
+        <a href="/analytics/" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Analytics
+        </a>
+
+        {% if is_admin %}
+        <a href="/users/" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Users
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- ACCOUNTS SECTION -->
+    {% if accounts %}
+    <div style="padding: 0 12px 16px;">
+        <div class="nav-section-label" style="padding: 0 12px; margin-bottom: 10px;">Accounts</div>
+        {% for acc in accounts %}
+        <div style="display:flex; align-items:center; justify-content:space-between; padding: 9px 14px; border-radius:14px; background: var(--cream); border: 1px solid var(--pink-soft); margin-bottom: 6px;">
+            <div style="overflow:hidden;">
+                <div style="font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ acc.name }}</div>
+                <div style="font-size:10px; color:var(--text-soft);">{{ acc.broker }} · #{{ acc.account_number }}</div>
+            </div>
+            <a href="{% url 'delete_account' acc.id %}"
+               title="Delete account"
+               style="flex-shrink:0; margin-left:8px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:var(--text-soft); text-decoration:none; transition:all 0.2s;"
+               onmouseover="this.style.background='#FFDDDD'; this.style.color='#C0392B';"
+               onmouseout="this.style.background='transparent'; this.style.color='var(--text-soft)';">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- BOTTOM SECTION -->
+    <div class="sidebar-bottom">
+
+        <div class="nav-user">
+            <div class="nav-user-avatar">
+                {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
+            </div>
+            <div class="nav-user-info">
+                <div class="nav-user-name">
+                    {{ request.user.get_full_name|default:request.user.username }}
+                </div>
+                <div class="nav-user-role">
+                    {{ request.user.profile.get_role_display|default:"Client" }}
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="nav-item nav-logout">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sign Out
+            </button>
+        </form>
+
+    </div>
+</aside>
+
+    <main class="main">
+
+        <div class="header">
+            <div class="header-left">
+                <h1>Trading <em>Journal</em></h1>
+            </div>
+            <a href="/upload/" class="upload-btn" {% if not is_admin and not is_assistant %}onclick="return false;" style="opacity:0.5;pointer-events:none;background:var(--text-soft);"{% endif %}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    Import CSV
+</a>
+        </div>
+
+        <!-- ── Monthly Summary Bar ── -->
+        <div class="summary-bar">
+            <div class="summary-card">
+                <div class="summary-card-label">Month P&amp;L</div>
+                <div class="summary-card-value {% if monthly_pnl > 0 %}pos{% elif monthly_pnl < 0 %}neg{% endif %}">
+                    {% if monthly_pnl > 0 %}+{% endif %}${{ monthly_pnl|floatformat:0 }}
+                </div>
+                <div class="summary-card-sub">this month</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Return</div>
+                <div class="summary-card-value {% if monthly_return > 0 %}pos{% elif monthly_return < 0 %}neg{% endif %}">
+                    {% if monthly_return is not None %}
+                        {% if monthly_return > 0 %}+{% endif %}{{ monthly_return }}%
+                    {% else %}—{% endif %}
+                </div>
+                <div class="summary-card-sub">on ${{ account_balance|floatformat:0 }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Win Rate</div>
+                <div class="summary-card-value">
+                    {% if win_rate is not None %}{{ win_rate }}%{% else %}—{% endif %}
+                </div>
+                <div class="summary-card-sub">of trading days</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Trades</div>
+                <div class="summary-card-value">{{ total_trades|default:"0" }}</div>
+                <div class="summary-card-sub">this month</div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-title">Monthly Overview</div>
+            <div class="section-line"></div>
+        </div>
+
+        <!-- Month Navigation -->
+        <div class="month-nav">
+            <a href="?month={{ prev_month }}&year={{ prev_year }}">⬅ Prev</a>
+            <h2>{{ month }}/{{ year }}</h2>
+            <a href="?month={{ next_month }}&year={{ next_year }}">Next ➡</a>
+        </div>
+
+        <div class="calendar-wrap">
+            <div class="calendar-header">
+                <div class="cal-dow">Sun</div>
+                <div class="cal-dow">Mon</div>
+                <div class="cal-dow">Tue</div>
+                <div class="cal-dow">Wed</div>
+                <div class="cal-dow">Thu</div>
+                <div class="cal-dow">Fri</div>
+                <div class="cal-dow">Sat</div>
+            </div>
+
+            <div class="calendar-grid">
+                {% for day in month_days %}
+                <a href="/day/{{ day.date|date:'Y-m-d' }}/"
+                   class="cal-day {% if not day.current_month %}other-month{% else %}{{ day.color_class }}{% endif %}">
+
+                    <div class="day-num">{{ day.date.day }}</div>
+
+                    {% if day.trades %}
+                        <div class="day-pnl">
+                            {% if day.pnl > 0 %}+{% endif %}${{ day.pnl|floatformat:0 }}
+                        </div>
+                        <div class="day-pnl-pct">
+                            {% if day.pnl_pct > 0 %}+{% endif %}{{ day.pnl_pct }}%
+                        </div>
+                        <div class="day-meta">
+                            <div class="day-meta-item">
+                                <span class="day-meta-val">{{ day.trades }}</span>
+                                trades
+                            </div>
+                            <div class="day-meta-item">
+                                <span class="day-meta-val">{{ day.contracts }}</span>
+                                contr.
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="day-empty-icon">✿</div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>

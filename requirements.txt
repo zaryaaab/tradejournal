@@ -1,0 +1,9 @@
+asgiref==3.11.1
+Django==5.2.12
+numpy
+pandas
+pillow
+python-dateutil==2.9.0.post0
+six==1.17.0
+sqlparse==0.5.5
+tzdata==2025.3
