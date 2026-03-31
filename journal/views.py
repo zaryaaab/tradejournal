@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Q
@@ -10,6 +12,16 @@ import calendar
 import pandas as pd
 
 from .models import Trade, TradingAccount, JournalEntry, Screenshot, UserProfile
+from .queries import trades_for_owner
+from .time_utils import ensure_chicago_datetime, trade_calendar_date
+from .trade_lifecycle import (
+    NormalizedFill,
+    parse_broker_pnl_cell,
+    persist_round_trip,
+    process_fills_for_symbol,
+    rithmic_symbol_and_mult,
+    tradovate_symbol_and_mult,
+)
 
 
 # ─────────────────────────────────────────
@@ -118,7 +130,7 @@ def dashboard(request):
         month = int(month)
         year  = int(year)
     else:
-        today = date.today()
+        today = timezone.localdate()
         month = today.month
         year  = today.year
 
@@ -126,15 +138,12 @@ def dashboard(request):
     account_obj     = TradingAccount.objects.filter(owner=owner).first()
     account_balance = account_obj.account_balance if account_obj else 50000.0
 
-    # All daily summaries for calendar grid — scoped to owner
-    trades = (
-        Trade.objects.filter(account__owner=owner)
-        .values("date")
-        .annotate(
-            pnl=Sum("pnl"),
-            trades=Count("id"),
-            contracts=Sum("quantity"),
-        )
+    # All daily summaries for calendar grid — same queryset as analytics / day view
+    owner_trades = trades_for_owner(owner)
+    trades = owner_trades.values("date").annotate(
+        pnl=Sum("pnl"),
+        trades=Count("id"),
+        contracts=Sum("quantity"),
     )
 
     trade_map  = {t["date"]: t for t in trades}
@@ -181,10 +190,7 @@ def dashboard(request):
 
     first_day    = date_cls(year, month, 1)
     last_day     = date_cls(year, month, cal_mod.monthrange(year, month)[1])
-    total_trades = Trade.objects.filter(
-        account__owner=owner,
-        date__range=(first_day, last_day)
-    ).count()
+    total_trades = owner_trades.filter(date__range=(first_day, last_day)).count()
 
     if month == 1:
         prev_month, prev_year = 12, year - 1
@@ -260,107 +266,49 @@ def parse_rithmic(df, account):
         tag = " [AUTO-LIQ]" if "Auto Liquidation" in str(r.get("Remarks", "")) else ""
         print(f"  [{idx}] {r['Update Time (CST)']} | {r['Buy/Sell']} | {r['Qty To Fill']} x {r['Symbol']} @ {r['Avg Fill Price']}{tag}")
 
-    print(f"\n[PAIRING] Starting...")
-    i = 0
+    print(f"\n[LIFECYCLE] Building fills by symbol (FIFO round trips)...")
+    fills_by_sym = {}
+    for _, row in all_rows.iterrows():
+        symbol, mult = rithmic_symbol_and_mult(row["Symbol"])
+        ts = ensure_chicago_datetime(row["Update Time (CST)"])
+        side = row["Buy/Sell"].strip()
+        is_buy = side in ("B", "Buy", "b", "buy")
+        qty = int(row["Qty To Fill"])
+        price = float(row["Avg Fill Price"])
+        bpnl = parse_broker_pnl_cell(row.get("P&L", "") or row.get("PnL", ""))
+        auto_liq = "Auto Liquidation" in str(row.get("Remarks", ""))
+        nf = NormalizedFill(
+            ts=ts,
+            is_buy=is_buy,
+            qty=qty,
+            price=price,
+            symbol=symbol,
+            multiplier=mult,
+            broker_pnl=bpnl,
+            is_auto_liq=auto_liq,
+        )
+        fills_by_sym.setdefault(symbol, []).append(nf)
+
     trades_created = 0
     skipped = 0
-
-    while i < len(all_rows) - 1:
-        entry = all_rows.iloc[i]
-        exit = all_rows.iloc[i + 1]
-
-        # Skip same direction
-        if entry["Buy/Sell"].strip() == exit["Buy/Sell"].strip():
-            print(f"  [SKIP] Same direction at i={i}")
-            skipped += 1
-            i += 1
-            continue
-
-        is_auto_liq_exit = "Auto Liquidation" in str(exit.get("Remarks", ""))
-
-        # Extract trade details
-        entry_price = float(entry["Avg Fill Price"])
-        exit_price = float(exit["Avg Fill Price"])
-        qty = int(entry["Qty To Fill"])
-        symbol_raw = str(entry["Symbol"]).strip()
-        side = entry["Buy/Sell"].strip()
-
-        # Determine symbol and multiplier
-        if "MNQ" in symbol_raw:
-            symbol = "MNQ"
-            multiplier = 2
-        elif "MES" in symbol_raw:
-            symbol = "MES"
-            multiplier = 5
-        elif "NQ" in symbol_raw:
-            symbol = "NQ"
-            multiplier = 20
-        elif "ES" in symbol_raw:
-            symbol = "ES"
-            multiplier = 50
-        else:
-            symbol = symbol_raw
-            multiplier = 1
-
-        # CRITICAL FIX: Use broker-provided PnL from the exit row
-        # The PnL for the trade should be associated with the exit/close order
-        raw_pnl = str(exit.get("P&L", "") or exit.get("PnL", "")).strip()
-
-        pnl = None
-        if raw_pnl and raw_pnl != "nan":
-            is_negative = raw_pnl.startswith("(") and raw_pnl.endswith(")")
-            cleaned = raw_pnl.replace("$", "").replace(",", "").replace("(", "").replace(")", "")
-            try:
-                pnl = float(cleaned)
-                if is_negative:
-                    pnl = -pnl
-                print(f"  [PNL] Using broker P&L from exit: {pnl:.2f}")
-            except:
-                print(f"  [WARN] Could not parse P&L: '{raw_pnl}', using fallback")
-
-        # Fallback calculation if broker PnL not available
-        if pnl is None:
-            if side == "B":
-                pnl = (exit_price - entry_price) * multiplier * qty
+    for sym, flist in sorted(fills_by_sym.items()):
+        completed, tail_net = process_fills_for_symbol(flist)
+        if tail_net != 0:
+            print(
+                f"  [WARN] {sym}: import ended with open net qty={tail_net} "
+                f"(no round-trip row emitted for remainder)"
+            )
+        for c in completed:
+            _, created = persist_round_trip(account, c)
+            if created:
+                trades_created += 1
+                print(
+                    f"  [SAVE] {sym} round-trip pnl={c.pnl} qty={c.quantity} "
+                    f"{c.entry_time} → {c.exit_time}"
+                )
             else:
-                pnl = (entry_price - exit_price) * multiplier * qty
-            print(f"  [PNL] Using calculated (fallback): {pnl:.2f}")
-
-        print(f"\n[PAIR ATTEMPT] i={i}")
-        print(f"  ENTRY: {entry['Buy/Sell']} {qty} x {symbol} @ {entry_price}")
-        print(f"  EXIT: {exit['Buy/Sell']} {qty} x {symbol} @ {exit_price}")
-        print(f"  PNL: ${pnl:.2f}" + (" (AUTO-LIQ)" if is_auto_liq_exit else ""))
-
-        # Parse timestamps — Django localises to America/Chicago via settings.TIME_ZONE
-        entry_time = timezone.make_aware(pd.to_datetime(entry["Update Time (CST)"]).to_pydatetime())
-        exit_time  = timezone.make_aware(pd.to_datetime(exit["Update Time (CST)"]).to_pydatetime())
-        journal_date = entry_time.date()   # correct CST-based date
-
-        # Save to database
-        _, created = Trade.objects.get_or_create(
-            account=account,
-            symbol=symbol,
-            entry_time=entry_time,
-            exit_time=exit_time,
-            entry_price=entry_price,
-            exit_price=exit_price,
-            defaults={
-                "side": side,
-                "quantity": qty,
-                "pnl": pnl,
-                "date": journal_date,
-                "is_auto_liq": is_auto_liq_exit,
-            },
-        )
-
-        if created:
-            trades_created += 1
-            print(f"  [SAVE] ✓ Trade #{trades_created} saved")
-        else:
-            print(f"  [SKIP] Duplicate trade")
-            skipped += 1
-
-        i += 2
+                skipped += 1
+                print(f"  [SKIP] Duplicate trade {sym} {c.entry_time}")
 
     print(f"\n{'='*60}")
     print(f"[RITHMIC PARSER] DONE — created={trades_created} skipped={skipped}")
@@ -388,101 +336,51 @@ def parse_tradovate(df, account):
     for idx, r in rows.iterrows():
         print(f"  [{idx}] {r['Fill Time']} | {r['B/S'].strip()} | {r['filledQty']} x {r['Product']} @ {r['avgPrice']} | PnL: {r.get('pnl', 'N/A')}")
 
-    print(f"\n[PAIRING] Starting...")
-    i = 0
+    print(f"\n[LIFECYCLE] Building fills by symbol (FIFO round trips)...")
+    fills_by_sym = {}
+    for _, row in rows.iterrows():
+        symbol, mult = tradovate_symbol_and_mult(row["Product"])
+        ts = ensure_chicago_datetime(row["Fill Time"])
+        side = row["B/S"].strip()
+        is_buy = side == "Buy"
+        qty = int(row["filledQty"])
+        price = float(row["avgPrice"])
+        bpnl = parse_broker_pnl_cell(row.get("pnl", ""))
+        nf = NormalizedFill(
+            ts=ts,
+            is_buy=is_buy,
+            qty=qty,
+            price=price,
+            symbol=symbol,
+            multiplier=mult,
+            broker_pnl=bpnl,
+            is_auto_liq=False,
+        )
+        fills_by_sym.setdefault(symbol, []).append(nf)
+
     trades_created = 0
     skipped = 0
-
-    while i < len(rows) - 1:
-
-        entry = rows.iloc[i]
-        exit = rows.iloc[i + 1]
-
-        entry_side = entry["B/S"].strip()
-        exit_side = exit["B/S"].strip()
-
-        print(f"\n[PAIR ATTEMPT] i={i}")
-        print(f"  ENTRY: [{i}] {entry['Fill Time']} | {entry_side} {entry['filledQty']} x {entry['Product']} @ {entry['avgPrice']}")
-        print(f"  EXIT : [{i+1}] {exit['Fill Time']} | {exit_side} {exit['filledQty']} x {exit['Product']} @ {exit['avgPrice']}")
-
-        if entry_side == exit_side:
-            print(f"  [SKIP] Same direction — advancing by 1")
-            skipped += 1
-            i += 1
-            continue
-
-        entry_price = float(entry["avgPrice"])
-        exit_price = float(exit["avgPrice"])
-        qty = int(entry["filledQty"])
-        symbol = str(entry["Product"]).strip()
-
-        if symbol == "MNQ":
-            multiplier = 2
-        elif symbol == "MES":
-            multiplier = 5
-        elif symbol == "NQ":
-            multiplier = 20
-        elif symbol == "ES":
-            multiplier = 50
-        else:
-            multiplier = 1
-
-        # Use CSV pnl column — Tradovate attaches P&L to the closing fill
-        raw_pnl = str(exit.get("pnl", "")).strip()
-        if not raw_pnl or raw_pnl.lower() == "nan":
-            raw_pnl = str(entry.get("pnl", "")).strip()
-
-        is_negative = raw_pnl.startswith("(") and raw_pnl.endswith(")")
-        cleaned = raw_pnl.replace("$", "").replace(",", "").replace("(", "").replace(")", "")
-
-        try:
-            pnl = float(cleaned)
-            if is_negative:
-                pnl = -pnl
-            print(f"  [PNL] Using CSV value: {raw_pnl} -> {pnl:.2f}")
-        except:
-            # fallback only if pnl missing or invalid
-            print(f"  [PNL] CSV value '{raw_pnl}' invalid, calculating from prices")
-            if entry_side == "Buy":
-                pnl = (exit_price - entry_price) * multiplier * qty
+    for sym, flist in sorted(fills_by_sym.items()):
+        completed, tail_net = process_fills_for_symbol(flist)
+        if tail_net != 0:
+            print(
+                f"  [WARN] {sym}: import ended with open net qty={tail_net} "
+                f"(no round-trip row emitted for remainder)"
+            )
+        for c in completed:
+            _, created = persist_round_trip(account, c)
+            if created:
+                trades_created += 1
+                print(
+                    f"  [SAVE] {sym} round-trip pnl={c.pnl} qty={c.quantity} "
+                    f"{c.entry_time} → {c.exit_time}"
+                )
             else:
-                pnl = (entry_price - exit_price) * multiplier * qty
-
-        side = "B" if entry_side == "Buy" else "S"
-
-        print(f"  [SYMBOL] '{symbol}' multiplier={multiplier}")
-        print(f"  [PNL] {'LONG' if side == 'B' else 'SHORT'}: pnl={pnl:.2f}")
-
-        # Parse timestamps — Django localises to America/Chicago via settings.TIME_ZONE
-        entry_time   = timezone.make_aware(pd.to_datetime(entry["Fill Time"]).to_pydatetime())
-        exit_time    = timezone.make_aware(pd.to_datetime(exit["Fill Time"]).to_pydatetime())
-        journal_date = entry_time.date()   # correct CST-based date
-
-        _, created = Trade.objects.get_or_create(
-            account=account,
-            symbol=symbol,
-            entry_time=entry_time,
-            exit_time=exit_time,
-            entry_price=entry_price,
-            exit_price=exit_price,
-            defaults={
-                "side": side,
-                "quantity": qty,
-                "pnl": pnl,
-                "date": journal_date,
-                "is_auto_liq": False,
-            },
-        )
-
-        if created:
-            trades_created += 1
-            print(f"  [SAVE] ✓ Trade #{trades_created} saved")
-        else:
-            print(f"  [SKIP] Duplicate trade — already exists, skipping")
-        i += 2
+                skipped += 1
+                print(f"  [SKIP] Duplicate trade {sym} {c.entry_time}")
 
     print(f"\n{'='*60}")
-    print(f"[TRADOVATE PARSER] DONE — created={trades_created} skipped={skipped} unpaired={len(rows) - (trades_created * 2 + skipped)}")
+    print(f"[TRADOVATE PARSER] DONE — created={trades_created} skipped={skipped}")
     print(f"{'='*60}\n")
 
 def parse_performance(df, account):
@@ -556,10 +454,9 @@ def parse_performance(df, account):
 
         print(f"[DEBUG] Original times - entry: {entry_raw}, exit: {exit_raw}")
 
-        # Django localises to America/Chicago via settings.TIME_ZONE
-        entry_time   = timezone.make_aware(entry_raw.to_pydatetime())
-        exit_time    = timezone.make_aware(exit_raw.to_pydatetime())
-        journal_date = entry_time.date()   # correct CST-based date
+        entry_time = ensure_chicago_datetime(entry_raw)
+        exit_time = ensure_chicago_datetime(exit_raw)
+        journal_date = trade_calendar_date(entry_time)
 
         print(f"[DEBUG] Timezone aware - entry: {entry_time}, exit: {exit_time}")
         print(f"[DEBUG] Journal date (CST): {journal_date}")
@@ -694,10 +591,7 @@ def day_view(request, date):
 
     day = datetime.strptime(date, "%Y-%m-%d").date()
 
-    trades = Trade.objects.filter(
-        account__owner=owner,
-        date=day
-    ).prefetch_related("screenshots")
+    trades = trades_for_owner(owner).filter(date=day).prefetch_related("screenshots")
 
     # Journal entry always belongs to the admin user (Dana)
     journal, _ = JournalEntry.objects.get_or_create(
@@ -853,8 +747,8 @@ def analytics(request):
     if role == "assistant":
         return redirect("upload_csv")
 
-    owner       = _get_admin_user(request)
-    user_trades = Trade.objects.filter(account__owner=owner)
+    owner = _get_admin_user(request)
+    user_trades = trades_for_owner(owner)
 
     total_trades = user_trades.count()
     if total_trades == 0:
@@ -960,8 +854,7 @@ def delete_account(request, account_id):
         "trades":      trades,
         "trade_count": trades.count(),
     })
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+
 
 @login_required
 def change_password(request):
