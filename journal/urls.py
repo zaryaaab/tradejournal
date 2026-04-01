@@ -12,6 +12,11 @@ urlpatterns = [
     # ── Core app ─────────────────────────────────────────────────────
     path("",                views.dashboard,  name="dashboard"),
     path("upload/",         views.upload_csv, name="upload_csv"),
+    path(
+        "select-trading-account/",
+        views.select_trading_account,
+        name="select_trading_account",
+    ),
     path("day/<str:date>/", views.day_view,   name="day_view"),
 
     # ── Analytics ────────────────────────────────────────────────────

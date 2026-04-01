@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
@@ -6,11 +8,19 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 from datetime import date, datetime
 from io import StringIO
 import calendar
 import pandas as pd
 
+from .access import (
+    SELECTED_TRADING_ACCOUNT_SESSION_KEY,
+    get_principal_owner,
+    resolve_selected_trading_account_id,
+    show_trading_accounts_sidebar,
+)
 from .models import Trade, TradingAccount, JournalEntry, Screenshot, UserProfile
 from .queries import trades_for_owner
 from .time_utils import ensure_chicago_datetime, trade_calendar_date
@@ -28,69 +38,46 @@ from .trade_lifecycle import (
 # HELPERS
 # ─────────────────────────────────────────
 def _get_admin_user(request):
-    """
-    Return the 'owner' user whose trades should be displayed.
-    - Super Admin → themselves (superadmin)
-    - Admin → superadmin (so admins see all trades)
-    - Assistant / Client → find the super_admin who created them
-    """
-    try:
-        role = request.user.profile.role
-    except Exception:
-        role = "client"
+    """Principal owner for trades/accounts (alias for shared access helper)."""
+    return get_principal_owner(request)
 
-    # Super admin sees their own trades
-    if role == "super_admin":
-        return request.user
 
-    # Admin should see superadmin's trades (so they see everything)
-    if role == "admin":
-        # Get the first super_admin user
-        super_admin_user = (
-            UserProfile.objects.filter(role="super_admin")
-            .select_related("user")
-            .first()
-        )
-        if super_admin_user:
-            return super_admin_user.user
+def _safe_redirect_path(request, raw_next: str) -> str:
+    raw_next = (raw_next or "").strip()
+    if not raw_next.startswith("/"):
+        return reverse("dashboard")
+    allowed = {request.get_host()}
+    allowed.update(settings.ALLOWED_HOSTS)
+    allowed.discard("*")
+    if url_has_allowed_host_and_scheme(
+        url=raw_next,
+        allowed_hosts=allowed,
+        require_https=request.is_secure(),
+    ):
+        return raw_next
+    return reverse("dashboard")
 
-        # Fallback: return request user if no superadmin exists
-        return request.user
 
-    # For assistant / client: use the super_admin who created them
-    try:
-        creator = request.user.profile.created_by
-        if creator:
-            # If creator is admin, find the superadmin
-            if creator.profile.role == "admin":
-                super_admin_user = (
-                    UserProfile.objects.filter(role="super_admin")
-                    .select_related("user")
-                    .first()
-                )
-                if super_admin_user:
-                    return super_admin_user.user
-            return creator
-    except Exception:
-        pass
-
-    # Fallback: first super_admin in the system
-    super_admin = (
-        UserProfile.objects.filter(role="super_admin")
-        .select_related("user")
-        .first()
-    )
-    if super_admin:
-        return super_admin.user
-
-    # Last resort: first admin
-    admin = (
-        UserProfile.objects.filter(role="admin")
-        .select_related("user")
-        .first()
-    )
-    return admin.user if admin else request.user
-
+@login_required
+@require_POST
+def select_trading_account(request):
+    if not show_trading_accounts_sidebar(request):
+        return redirect("dashboard")
+    owner = get_principal_owner(request)
+    next_url = _safe_redirect_path(request, request.POST.get("next", ""))
+    aid = request.POST.get("trading_account_id", "").strip()
+    if aid in ("", "all"):
+        request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
+    else:
+        try:
+            iid = int(aid)
+        except ValueError:
+            return redirect(next_url)
+        if TradingAccount.objects.filter(pk=iid, owner=owner).exists():
+            request.session[SELECTED_TRADING_ACCOUNT_SESSION_KEY] = iid
+        else:
+            request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
+    return redirect(next_url)
 
 
 def _require_admin(request):
@@ -114,14 +101,8 @@ def _require_super_admin(request):
 
 @login_required
 def dashboard(request):
-    role = getattr(getattr(request.user, "profile", None), "role", "client")
-
-    # Assistants go straight to upload page — they have no dashboard
-    if role == "assistant":
-        return redirect("upload_csv")
-
-    # The admin owner whose trades we display
     owner = _get_admin_user(request)
+    selected_aid = resolve_selected_trading_account_id(request, owner)
 
     month = request.GET.get("month")
     year  = request.GET.get("year")
@@ -134,12 +115,13 @@ def dashboard(request):
         month = today.month
         year  = today.year
 
-    # Account balance (first owned account, default 50k)
-    account_obj     = TradingAccount.objects.filter(owner=owner).first()
+    if selected_aid is not None:
+        account_obj = TradingAccount.objects.filter(pk=selected_aid, owner=owner).first()
+    else:
+        account_obj = TradingAccount.objects.filter(owner=owner).first()
     account_balance = account_obj.account_balance if account_obj else 50000.0
 
-    # All daily summaries for calendar grid — same queryset as analytics / day view
-    owner_trades = trades_for_owner(owner)
+    owner_trades = trades_for_owner(owner, selected_aid)
     trades = owner_trades.values("date").annotate(
         pnl=Sum("pnl"),
         trades=Count("id"),
@@ -216,8 +198,6 @@ def dashboard(request):
         "profit_factor":   profit_factor,
         "total_trades":    total_trades,
         "account_balance": account_balance,
-        # Only show accounts list to admin roles
-        "accounts": TradingAccount.objects.filter(owner=owner) if _require_admin(request) else [],
     }
 
     return render(request, "dashboard.html", context)
@@ -582,16 +562,17 @@ def upload_csv(request):
 
 @login_required
 def day_view(request, date):
-    role  = getattr(getattr(request.user, "profile", None), "role", "client")
     owner = _get_admin_user(request)
-
-    # Assistants cannot access day view
-    if role == "assistant":
-        return redirect("upload_csv")
+    selected_aid = resolve_selected_trading_account_id(request, owner)
 
     day = datetime.strptime(date, "%Y-%m-%d").date()
 
-    trades = trades_for_owner(owner).filter(date=day).prefetch_related("screenshots")
+    trades = (
+        trades_for_owner(owner, selected_aid)
+        .filter(date=day)
+        .select_related("account")
+        .prefetch_related("screenshots")
+    )
 
     # Journal entry always belongs to the admin user (Dana)
     journal, _ = JournalEntry.objects.get_or_create(
@@ -743,12 +724,9 @@ def day_view(request, date):
 
 @login_required
 def analytics(request):
-    role = getattr(getattr(request.user, "profile", None), "role", "client")
-    if role == "assistant":
-        return redirect("upload_csv")
-
     owner = _get_admin_user(request)
-    user_trades = trades_for_owner(owner)
+    selected_aid = resolve_selected_trading_account_id(request, owner)
+    user_trades = trades_for_owner(owner, selected_aid)
 
     total_trades = user_trades.count()
     if total_trades == 0:
@@ -807,7 +785,10 @@ def analytics(request):
             "win_rate":  g_winrate,
         })
 
-    account_obj     = TradingAccount.objects.filter(owner=owner).first()
+    if selected_aid is not None:
+        account_obj = TradingAccount.objects.filter(pk=selected_aid, owner=owner).first()
+    else:
+        account_obj = TradingAccount.objects.filter(owner=owner).first()
     account_balance = account_obj.account_balance if account_obj else 50000.0
     total_return    = round((total_pnl / account_balance) * 100, 2) if account_balance else None
 
@@ -845,14 +826,20 @@ def delete_account(request, account_id):
     account = get_object_or_404(TradingAccount, id=account_id, owner=owner)
 
     if request.method == "POST":
+        sel = request.session.get(SELECTED_TRADING_ACCOUNT_SESSION_KEY)
+        if sel == account.id:
+            request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
         account.delete()
         return redirect("dashboard")
 
     trades = Trade.objects.filter(account=account).order_by("-date", "-entry_time")
+    trade_count = trades.count()
+    total_pnl = round(trades.aggregate(t=Sum("pnl"))["t"] or 0, 2)
     return render(request, "delete_account_confirm.html", {
         "account":     account,
         "trades":      trades,
-        "trade_count": trades.count(),
+        "trade_count": trade_count,
+        "total_pnl":   total_pnl,
     })
 
 

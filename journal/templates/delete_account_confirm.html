@@ -360,6 +360,13 @@
                 <span class="meta-label">Total Trades</span>
                 <span class="meta-value">{{ trade_count }}</span>
             </div>
+            <div class="meta-sep"></div>
+            <div class="meta-item">
+                <span class="meta-label">Total P&amp;L (sum of rows)</span>
+                <span class="meta-value" style="font-size:18px;{% if total_pnl > 0 %}color:#2D7A5F;{% elif total_pnl < 0 %}color:#C0392B;{% endif %}">
+                    {% if total_pnl > 0 %}+{% endif %}${{ total_pnl|floatformat:2 }}
+                </span>
+            </div>
         </div>
 
         <div class="warning-list">

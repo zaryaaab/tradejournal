@@ -1,0 +1,30 @@
+<div class="nav-section-label" style="padding: 0 12px; margin-bottom: 10px;">Trading accounts</div>
+<form method="post" action="{% url 'select_trading_account' %}" class="account-pick-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <button type="submit" name="trading_account_id" value="all"
+            class="account-pick-btn{% if not selected_trading_account_id %} selected{% endif %}">
+        <span class="account-pick-title">All accounts</span>
+        <span class="account-pick-meta">Show combined calendar &amp; analytics</span>
+    </button>
+</form>
+{% for acc in sidebar_trading_accounts %}
+<div class="account-pick-row">
+    <form method="post" action="{% url 'select_trading_account' %}" class="account-pick-form" style="flex:1;min-width:0;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" name="trading_account_id" value="{{ acc.id }}"
+                class="account-pick-btn{% if selected_trading_account_id == acc.id %} selected{% endif %}">
+            <span class="account-pick-title">{{ acc.name }}</span>
+            <span class="account-pick-meta">{{ acc.broker }} · {{ acc.account_number }}</span>
+        </button>
+    </form>
+    {% if can_manage_trading_accounts %}
+    <a href="{% url 'delete_account' acc.id %}" class="account-del-icon" title="Delete account">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+{% endfor %}
