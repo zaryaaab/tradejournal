@@ -27,9 +27,12 @@ from .time_utils import ensure_chicago_datetime, trade_calendar_date
 from .trade_lifecycle import (
     NormalizedFill,
     parse_broker_pnl_cell,
+    parse_fill_qty,
     persist_round_trip,
     process_fills_for_symbol,
+    rithmic_side_to_is_buy,
     rithmic_symbol_and_mult,
+    tradovate_side_to_is_buy,
     tradovate_symbol_and_mult,
 )
 
@@ -248,12 +251,11 @@ def parse_rithmic(df, account):
 
     print(f"\n[LIFECYCLE] Building fills by symbol (FIFO round trips)...")
     fills_by_sym = {}
-    for _, row in all_rows.iterrows():
+    for seq, (_, row) in enumerate(all_rows.iterrows()):
         symbol, mult = rithmic_symbol_and_mult(row["Symbol"])
         ts = ensure_chicago_datetime(row["Update Time (CST)"])
-        side = row["Buy/Sell"].strip()
-        is_buy = side in ("B", "Buy", "b", "buy")
-        qty = int(row["Qty To Fill"])
+        is_buy = rithmic_side_to_is_buy(row["Buy/Sell"])
+        qty = parse_fill_qty(row["Qty To Fill"])
         price = float(row["Avg Fill Price"])
         bpnl = parse_broker_pnl_cell(row.get("P&L", "") or row.get("PnL", ""))
         auto_liq = "Auto Liquidation" in str(row.get("Remarks", ""))
@@ -266,6 +268,7 @@ def parse_rithmic(df, account):
             multiplier=mult,
             broker_pnl=bpnl,
             is_auto_liq=auto_liq,
+            seq=seq,
         )
         fills_by_sym.setdefault(symbol, []).append(nf)
 
@@ -318,12 +321,11 @@ def parse_tradovate(df, account):
 
     print(f"\n[LIFECYCLE] Building fills by symbol (FIFO round trips)...")
     fills_by_sym = {}
-    for _, row in rows.iterrows():
+    for seq, (_, row) in enumerate(rows.iterrows()):
         symbol, mult = tradovate_symbol_and_mult(row["Product"])
         ts = ensure_chicago_datetime(row["Fill Time"])
-        side = row["B/S"].strip()
-        is_buy = side == "Buy"
-        qty = int(row["filledQty"])
+        is_buy = tradovate_side_to_is_buy(row["B/S"])
+        qty = parse_fill_qty(row["filledQty"])
         price = float(row["avgPrice"])
         bpnl = parse_broker_pnl_cell(row.get("pnl", ""))
         nf = NormalizedFill(
@@ -335,6 +337,7 @@ def parse_tradovate(df, account):
             multiplier=mult,
             broker_pnl=bpnl,
             is_auto_liq=False,
+            seq=seq,
         )
         fills_by_sym.setdefault(symbol, []).append(nf)
 

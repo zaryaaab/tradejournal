@@ -27,8 +27,9 @@ from .time_utils import ensure_chicago_datetime
 # --- Symbol / multiplier (mirrors previous parser logic) -----------------
 
 
-def rithmic_symbol_and_mult(symbol_raw: str) -> Tuple[str, float]:
-    s = str(symbol_raw).strip()
+def _futures_root_and_mult(upper_compact: str) -> Optional[Tuple[str, float]]:
+    """Map variant strings to canonical roots. MNQ before NQ; MES before ES."""
+    s = upper_compact
     if "MNQ" in s:
         return "MNQ", 2.0
     if "MES" in s:
@@ -37,20 +38,46 @@ def rithmic_symbol_and_mult(symbol_raw: str) -> Tuple[str, float]:
         return "NQ", 20.0
     if "ES" in s:
         return "ES", 50.0
-    return s, 1.0
+    return None
+
+
+def rithmic_symbol_and_mult(symbol_raw: str) -> Tuple[str, float]:
+    raw = str(symbol_raw).strip()
+    compact = raw.upper().replace(" ", "")
+    hit = _futures_root_and_mult(compact)
+    if hit:
+        return hit
+    return raw, 1.0
 
 
 def tradovate_symbol_and_mult(product: str) -> Tuple[str, float]:
-    s = str(product).strip()
-    if s == "MNQ":
-        return "MNQ", 2.0
-    if s == "MES":
-        return "MES", 5.0
-    if s == "NQ":
-        return "NQ", 20.0
-    if s == "ES":
-        return "ES", 50.0
-    return s, 1.0
+    raw = str(product).strip()
+    compact = raw.upper().replace(" ", "")
+    hit = _futures_root_and_mult(compact)
+    if hit:
+        return hit
+    return raw, 1.0
+
+
+def parse_fill_qty(raw) -> int:
+    """Non-positive or bad values become 0 (skipped by apply_fill). Uses abs() for signed broker qty."""
+    try:
+        q = int(float(raw))
+    except (TypeError, ValueError):
+        return 0
+    if q == 0:
+        return 0
+    return abs(q)
+
+
+def rithmic_side_to_is_buy(side_raw: str) -> bool:
+    s = str(side_raw).strip().lower()
+    return s in ("b", "buy", "bot")
+
+
+def tradovate_side_to_is_buy(side_raw: str) -> bool:
+    s = str(side_raw).strip().lower()
+    return s in ("buy", "b", "bot")
 
 
 def parse_broker_pnl_cell(raw) -> Optional[float]:
@@ -81,6 +108,7 @@ class NormalizedFill:
     multiplier: float
     broker_pnl: Optional[float] = None
     is_auto_liq: bool = False
+    seq: int = 0
 
 
 @dataclass
@@ -255,7 +283,7 @@ def process_fills_for_symbol(
     sym = fills[0].symbol
     book = PositionBook()
     out: List[CompletedRoundTrip] = []
-    for f in sorted(fills, key=lambda x: x.ts):
+    for f in sorted(fills, key=lambda x: (x.ts, x.seq)):
         if f.symbol != sym:
             raise ValueError("Mixed symbols in process_fills_for_symbol")
         out.extend(book.apply_fill(f))
