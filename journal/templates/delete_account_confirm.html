@@ -441,7 +441,7 @@
 
     <!-- ── Action buttons ── -->
     <div class="actions-card">
-        <a href="/" class="btn-cancel">← Cancel, keep my account</a>
+        <a href="{% url 'trading_accounts_list' %}" class="btn-cancel">← Cancel, keep my account</a>
         <form method="POST" style="flex:1; display:flex;">
             {% csrf_token %}
             <button type="submit" class="btn-delete" style="width:100%;">

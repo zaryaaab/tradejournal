@@ -292,6 +292,14 @@
             <button type="submit" class="save-btn">Reset Password</button>
         </form>
     </div>
+    {% elif not can_reset_password %}
+    <p style="font-size:12px;color:#7A4A5C;max-width:440px;line-height:1.55;margin-top:18px;padding:14px 18px;background:#FDF4F7;border-radius:14px;border:1px solid #E89BB5;">
+      You can’t reset this user’s password from here.
+      {% if request.user.profile.role == "admin" %}
+      As an <strong>Admin</strong>, you can reset passwords only for <strong>Assistants</strong> and <strong>Clients</strong> you created. <strong>Super Administrators</strong> can reset anyone’s password (except where restricted by role).
+      {% endif %}
+      Change your own password on <strong>User Management</strong> under “Your password.”
+    </p>
     {% endif %}
     <!-- ========================================================= -->
 

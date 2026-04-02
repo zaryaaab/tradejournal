@@ -13,11 +13,14 @@
 }
 
 .sidebar {
+    box-sizing: border-box;
     width: 248px;
-    height: 100vh;
+    flex-shrink: 0;
+    align-self: flex-start;
     position: sticky;
     top: 0;
-    flex-shrink: 0;
+    height: 100vh;
+    max-height: 100vh;
     background: var(--white);
     border-right: 1.5px solid var(--pink-light);
     display: flex;
@@ -95,15 +98,38 @@
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 11px;
-    padding: 11px 14px;
+    gap: 9px;
+    padding: 10px 12px;
     border-radius: 16px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-soft);
     text-decoration: none;
     transition: all 0.22s;
     margin-bottom: 3px;
+    min-width: 0;
+    line-height: 1.25;
+    flex-wrap: nowrap;
+}
+
+.nav-label {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.nav-client-hint {
+    flex-shrink: 0;
+    font-size: 8px;
+    color: var(--text-soft);
+}
+
+.nav-item .active-dot {
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .nav-item.active {
@@ -133,7 +159,6 @@
     height: 6px;
     background: var(--pink-deep);
     border-radius: 50%;
-    margin-left: auto;
 }
 
 .sidebar-accounts-scroll {
@@ -149,6 +174,68 @@
 .sidebar-accounts-scroll::-webkit-scrollbar-thumb {
     background: var(--pink-light);
     border-radius: 3px;
+}
+
+.sidebar-overview-label {
+    padding: 0 12px;
+    margin-bottom: 6px;
+}
+
+.sidebar-overview-meta {
+    padding: 0 12px 8px;
+    font-size: 11px;
+    color: var(--text-soft);
+    line-height: 1.4;
+}
+
+.sidebar-overview-meta strong {
+    color: var(--text);
+}
+
+.sidebar-overview-link-wrap {
+    padding: 0 12px 12px;
+}
+
+.sidebar-overview-link {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--pink-deep);
+    text-decoration: none;
+}
+
+.sidebar-overview-link:hover {
+    text-decoration: underline;
+}
+
+.sidebar-scope-form {
+    padding: 0 12px 10px;
+}
+
+.sidebar-scope-label {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--pink);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.sidebar-scope-select {
+    width: 100%;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1.5px solid var(--pink-soft);
+    background: var(--cream);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.sidebar-scope-select:focus {
+    outline: none;
+    border-color: var(--pink-mid);
 }
 
 .account-pick-form { margin: 0 0 6px 0; }
@@ -288,4 +375,66 @@
 .nav-logout:hover {
     background: #FDE8ED !important;
     color: var(--pink-deep) !important;
+}
+
+/* ── Pages that include app_sidebar without dashboard/analytics inline CSS ── */
+html:has(body.has-app-shell) {
+    height: 100%;
+}
+
+body.has-app-shell {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+}
+
+body.has-app-shell::before,
+body.has-app-shell::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.has-app-shell::before {
+    top: -120px;
+    right: -120px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(244, 167, 185, 0.22) 0%, transparent 65%);
+}
+
+body.has-app-shell::after {
+    bottom: -80px;
+    left: 180px;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(244, 167, 185, 0.13) 0%, transparent 65%);
+}
+
+body.has-app-shell main.main {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 40px 44px 60px;
+    position: relative;
+    z-index: 1;
+}
+
+body.has-app-shell main.main::-webkit-scrollbar {
+    width: 5px;
+}
+
+body.has-app-shell main.main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body.has-app-shell main.main::-webkit-scrollbar-thumb {
+    background: var(--pink-light);
+    border-radius: 3px;
 }

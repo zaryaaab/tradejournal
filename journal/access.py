@@ -96,7 +96,9 @@ def resolve_selected_trading_account_id(request, owner: User) -> int | None:
     except (TypeError, ValueError):
         request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
         return None
-    if not TradingAccount.objects.filter(pk=aid, owner=owner).exists():
+    if not TradingAccount.objects.filter(
+        pk=aid, owner=owner, is_archived=False
+    ).exists():
         request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
         return None
     return aid

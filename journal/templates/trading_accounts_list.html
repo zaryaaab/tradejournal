@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Accounts — Dana's Trading Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <style>
+        :root {
+            --pink: #D96B8A; --pink-light: #EFA8BC; --pink-soft: #F5C8D6;
+            --pink-deep: #A8324F; --gold: #D4A96A; --cream: #FDF0F3;
+            --white: #FFFFFF; --text: #3A2030; --text-soft: #7A4A5C;
+            --green: #5DB882; --red: #E07070;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .header { margin-bottom: 28px; }
+        .header h1 { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300; }
+        .header h1 em { font-style: italic; color: var(--pink-deep); }
+        .header-sub { font-size: 12.5px; color: var(--text-soft); margin-top: 8px; max-width: 560px; line-height: 1.5; }
+        .filters {
+            background: var(--white); border: 1.5px solid var(--pink-light); border-radius: 20px;
+            padding: 20px 22px; margin-bottom: 22px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end;
+        }
+        .filters label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--pink-deep); font-weight: 600; display: block; margin-bottom: 4px; }
+        .filters input[type="text"], .filters select {
+            font-family: 'Nunito', sans-serif; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--pink-light);
+            font-size: 13px; min-width: 140px;
+        }
+        .filters button, .filters .btn-apply {
+            background: var(--pink-deep); color: white; border: none; padding: 10px 20px; border-radius: 12px;
+            font-size: 12.5px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;
+        }
+        .filters .btn-secondary { background: var(--white); color: var(--pink-deep); border: 1.5px solid var(--pink-light); }
+        .table-card {
+            background: var(--white); border: 1.5px solid var(--pink-light); border-radius: 22px; overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            text-align: left; padding: 12px 16px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em;
+            color: var(--pink-deep); background: var(--cream); border-bottom: 1px solid var(--pink-light);
+        }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--pink-soft); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .badge-active { background: #EAF7EF; color: #1A6B3A; }
+        .badge-eval { background: #FEF9EC; color: #7A5A1A; }
+        .badge-funded { background: #E8F4FC; color: #1565A3; }
+        .badge-blown { background: #FDEAEA; color: #C0392B; }
+        .badge-arch { background: var(--pink-soft); color: var(--pink-deep); }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .actions a, .actions button {
+            font-size: 11px; padding: 6px 12px; border-radius: 10px; text-decoration: none; font-family: inherit;
+            border: none; cursor: pointer; font-weight: 600;
+        }
+        .act-edit { background: var(--cream); color: var(--pink-deep); border: 1px solid var(--pink-light); }
+        .act-del { background: #FDEAEA; color: #C0392B; }
+        .act-arch { background: var(--white); color: var(--text-soft); border: 1px solid var(--pink-light); }
+        .pagination { display: flex; gap: 8px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+        .pagination a, .pagination span {
+            padding: 8px 14px; border-radius: 10px; text-decoration: none; font-size: 13px;
+            border: 1px solid var(--pink-light); color: var(--text-soft);
+        }
+        .pagination a:hover { background: var(--pink-soft); color: var(--pink-deep); }
+        .pagination .current { background: var(--pink-deep); color: white; border-color: var(--pink-deep); }
+        .empty { padding: 48px; text-align: center; color: var(--text-soft); }
+        .sort-link { color: var(--pink-deep); text-decoration: none; font-weight: 600; font-size: 10px; }
+    </style>
+</head>
+<body class="has-app-shell">
+{% include "partials/app_sidebar.html" %}
+<main class="main">
+    <div class="header">
+        <h1>Trading <em>Accounts</em></h1>
+        <p class="header-sub">This is the <strong>master list</strong> of broker accounts for imports and calendar/analytics scope. Search, filter, sort, and paginate as your list grows. Archived accounts are hidden from imports and the sidebar overview. Deleting an account permanently removes all trades and screenshots tied to it.</p>
+    </div>
+
+    <form class="filters" method="get" action="">
+        <div>
+            <label for="q">Search</label>
+            <input type="text" id="q" name="q" value="{{ current_q }}" placeholder="Name, #, broker">
+        </div>
+        <div>
+            <label for="broker">Broker</label>
+            <select id="broker" name="broker">
+                <option value="">All</option>
+                {% for b in broker_choices %}
+                <option value="{{ b }}" {% if current_broker == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="sort">Sort</label>
+            <select id="sort" name="sort">
+                <option value="name" {% if current_sort == "name" %}selected{% endif %}>Name A–Z</option>
+                <option value="-name" {% if current_sort == "-name" %}selected{% endif %}>Name Z–A</option>
+                <option value="broker" {% if current_sort == "broker" %}selected{% endif %}>Broker A–Z</option>
+                <option value="account_balance" {% if current_sort == "account_balance" %}selected{% endif %}>Balance low–high</option>
+                <option value="-account_balance" {% if current_sort == "-account_balance" %}selected{% endif %}>Balance high–low</option>
+                <option value="created_at" {% if current_sort == "created_at" %}selected{% endif %}>Created oldest</option>
+                <option value="-created_at" {% if current_sort == "-created_at" %}selected{% endif %}>Created newest</option>
+                <option value="status" {% if current_sort == "status" %}selected{% endif %}>Status</option>
+            </select>
+        </div>
+        <div>
+            <label for="per_page">Per page</label>
+            <select id="per_page" name="per_page">
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
+                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+            </select>
+        </div>
+        <div>
+            <label><input type="checkbox" name="archived" value="1" {% if show_archived %}checked{% endif %}> Show archived</label>
+        </div>
+        <button type="submit">Apply</button>
+        <a href="{% url 'trading_accounts_list' %}" class="btn-apply btn-secondary">Reset</a>
+    </form>
+
+    <div class="table-card">
+        {% if page_obj.object_list %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Broker</th>
+                    <th>Account #</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th>Archived</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in page_obj %}
+                <tr>
+                    <td><strong>{{ acc.name }}</strong></td>
+                    <td>{{ acc.broker }}</td>
+                    <td style="font-family:monospace;font-size:12px;color:var(--text-soft);">{{ acc.account_number }}</td>
+                    <td>${{ acc.account_balance|floatformat:0 }}</td>
+                    <td>
+                        {% if acc.status == "active" %}<span class="badge badge-active">Active</span>
+                        {% elif acc.status == "evaluation" %}<span class="badge badge-eval">Evaluation</span>
+                        {% elif acc.status == "funded" %}<span class="badge badge-funded">Funded</span>
+                        {% elif acc.status == "blown" %}<span class="badge badge-blown">Blown</span>
+                        {% else %}{{ acc.get_status_display }}{% endif %}
+                    </td>
+                    <td>{% if acc.is_archived %}<span class="badge badge-arch">Yes</span>{% else %}—{% endif %}</td>
+                    <td>
+                        <div class="actions">
+                            <a href="{% url 'edit_trading_account' acc.id %}" class="act-edit">Edit</a>
+                            <a href="{% url 'delete_account' acc.id %}" class="act-del">Delete</a>
+                            <form method="post" action="{% url 'archive_trading_account' acc.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="act-arch">{% if acc.is_archived %}Unarchive{% else %}Archive{% endif %}</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No trading accounts match these filters.</div>
+        {% endif %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Previous</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Next</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</main>
+</body>
+</html>

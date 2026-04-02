@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -17,6 +18,7 @@ import pandas as pd
 
 from .access import (
     SELECTED_TRADING_ACCOUNT_SESSION_KEY,
+    can_manage_trading_accounts,
     get_principal_owner,
     resolve_selected_trading_account_id,
     show_trading_accounts_sidebar,
@@ -43,6 +45,53 @@ from .trade_lifecycle import (
 def _get_admin_user(request):
     """Principal owner for trades/accounts (alias for shared access helper)."""
     return get_principal_owner(request)
+
+
+def _resolve_upload_trading_account(request, owner, account_number, defaults):
+    """
+    Resolve or create a TradingAccount for CSV import.
+    Returns (account, None) or (None, error_message) if account_number matches an archived account.
+    """
+    existing = TradingAccount.objects.filter(
+        owner=owner, account_number=account_number
+    ).first()
+    if existing:
+        if existing.is_archived:
+            return None, (
+                f'Account "{account_number}" is archived. Unarchive it on the '
+                "Accounts page before importing to it again."
+            )
+        if existing.uploaded_by_id != request.user.id:
+            existing.uploaded_by = request.user
+            existing.save(update_fields=["uploaded_by"])
+        return existing, None
+    account = TradingAccount.objects.create(
+        owner=owner,
+        account_number=account_number,
+        name=defaults["name"],
+        broker=defaults["broker"],
+        user=defaults.get("user", owner),
+        uploaded_by=request.user,
+        status=TradingAccount.STATUS_ACTIVE,
+        is_archived=False,
+    )
+    return account, None
+
+
+TRADING_ACCOUNTS_SORT_FIELDS = {
+    "name": "name",
+    "-name": "-name",
+    "broker": "broker",
+    "-broker": "-broker",
+    "account_balance": "account_balance",
+    "-account_balance": "-account_balance",
+    "created_at": "created_at",
+    "-created_at": "-created_at",
+    "status": "status",
+    "-status": "-status",
+    "account_number": "account_number",
+    "-account_number": "-account_number",
+}
 
 
 def _safe_redirect_path(request, raw_next: str) -> str:
@@ -76,7 +125,9 @@ def select_trading_account(request):
             iid = int(aid)
         except ValueError:
             return redirect(next_url)
-        if TradingAccount.objects.filter(pk=iid, owner=owner).exists():
+        if TradingAccount.objects.filter(
+            pk=iid, owner=owner, is_archived=False
+        ).exists():
             request.session[SELECTED_TRADING_ACCOUNT_SESSION_KEY] = iid
         else:
             request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
@@ -96,6 +147,22 @@ def _require_super_admin(request):
         return request.user.profile.role == "super_admin"
     except Exception:
         return False
+
+
+def _user_can_reset_target_password(request, target_profile) -> bool:
+    """Super admin: any user. Admin: only assistants/clients they created."""
+    try:
+        role = request.user.profile.role
+    except Exception:
+        return False
+    if role == "super_admin":
+        return True
+    if role == "admin":
+        return (
+            target_profile.created_by_id == request.user.id
+            and target_profile.role in ("assistant", "client")
+        )
+    return False
 
 
 # ─────────────────────────────────────────
@@ -121,7 +188,9 @@ def dashboard(request):
     if selected_aid is not None:
         account_obj = TradingAccount.objects.filter(pk=selected_aid, owner=owner).first()
     else:
-        account_obj = TradingAccount.objects.filter(owner=owner).first()
+        account_obj = TradingAccount.objects.filter(
+            owner=owner, is_archived=False
+        ).first()
     account_balance = account_obj.account_balance if account_obj else 50000.0
 
     owner_trades = trades_for_owner(owner, selected_aid)
@@ -498,62 +567,80 @@ def upload_csv(request):
         # Always the admin/super_admin, never the assistant themselves.
         owner = _get_admin_user(request)
 
+        import_errors: list[str] = []
+        any_import_ok = False
+
         if "Completed Orders" in text:
             df = load_rithmic_csv(text)
             for account_number, group in df.groupby("Account"):
-                account, _ = TradingAccount.objects.get_or_create(
-                    owner=owner,
-                    account_number=account_number,
-                    defaults={
-                        "name":        f"Account {account_number}",
-                        "broker":      "Rithmic",
-                        "user":        owner,          # legacy field
-                        "uploaded_by": request.user,
+                an = str(account_number).strip()
+                account, err = _resolve_upload_trading_account(
+                    request,
+                    owner,
+                    an,
+                    {
+                        "name": f"Account {an}",
+                        "broker": "Rithmic",
+                        "user": owner,
                     },
                 )
-                # Update uploaded_by on re-uploads
-                if account.uploaded_by != request.user:
-                    account.uploaded_by = request.user
-                    account.save()
+                if err:
+                    import_errors.append(err)
+                    continue
                 parse_rithmic(group.copy(), account)
+                any_import_ok = True
 
         elif "B/S" in text[:500]:
             df = pd.read_csv(StringIO(text))
             for account_number, group in df.groupby("Account"):
-                account, _ = TradingAccount.objects.get_or_create(
-                    owner=owner,
-                    account_number=account_number,
-                    defaults={
-                        "name":        f"Account {account_number}",
-                        "broker":      "Tradovate",
-                        "user":        owner,
-                        "uploaded_by": request.user,
+                an = str(account_number).strip()
+                account, err = _resolve_upload_trading_account(
+                    request,
+                    owner,
+                    an,
+                    {
+                        "name": f"Account {an}",
+                        "broker": "Tradovate",
+                        "user": owner,
                     },
                 )
-                if account.uploaded_by != request.user:
-                    account.uploaded_by = request.user
-                    account.save()
+                if err:
+                    import_errors.append(err)
+                    continue
                 parse_tradovate(group.copy(), account)
+                any_import_ok = True
 
         elif "buyPrice" in text and "sellPrice" in text:
             df = pd.read_csv(StringIO(text))
-            account, _ = TradingAccount.objects.get_or_create(
-                owner=owner,
-                account_number="performance",
-                defaults={
-                    "name":        "Performance Import",
-                    "broker":      "Tradovate",
-                    "user":        owner,
-                    "uploaded_by": request.user,
+            account, err = _resolve_upload_trading_account(
+                request,
+                owner,
+                "performance",
+                {
+                    "name": "Performance Import",
+                    "broker": "Tradovate",
+                    "user": owner,
                 },
             )
+            if err:
+                messages.error(request, err)
+                return render(request, "upload.html")
             parse_performance(df.copy(), account)
+            any_import_ok = True
 
         else:
             messages.error(request, "Unrecognized CSV format.")
             return render(request, "upload.html")
 
-        messages.success(request, "CSV imported successfully.")
+        if any_import_ok:
+            messages.success(request, "CSV imported successfully.")
+            for msg in dict.fromkeys(import_errors):
+                messages.warning(request, msg)
+        elif import_errors:
+            messages.error(request, "No data was imported.")
+            for msg in dict.fromkeys(import_errors):
+                messages.warning(request, msg)
+
         return redirect("dashboard")
 
     return render(request, "upload.html")
@@ -791,7 +878,9 @@ def analytics(request):
     if selected_aid is not None:
         account_obj = TradingAccount.objects.filter(pk=selected_aid, owner=owner).first()
     else:
-        account_obj = TradingAccount.objects.filter(owner=owner).first()
+        account_obj = TradingAccount.objects.filter(
+            owner=owner, is_archived=False
+        ).first()
     account_balance = account_obj.account_balance if account_obj else 50000.0
     total_return    = round((total_pnl / account_balance) * 100, 2) if account_balance else None
 
@@ -816,6 +905,151 @@ def analytics(request):
 
 
 # ─────────────────────────────────────────
+# TRADING ACCOUNTS (management page)
+# ─────────────────────────────────────────
+
+
+@login_required
+def trading_accounts_list(request):
+    if not can_manage_trading_accounts(request):
+        messages.error(request, "Access denied.")
+        return redirect("dashboard")
+
+    owner = _get_admin_user(request)
+    qs = TradingAccount.objects.filter(owner=owner)
+
+    show_archived = request.GET.get("archived") == "1"
+    if not show_archived:
+        qs = qs.filter(is_archived=False)
+
+    q_raw = request.GET.get("q", "").strip()
+    if q_raw:
+        qs = qs.filter(
+            Q(name__icontains=q_raw)
+            | Q(account_number__icontains=q_raw)
+            | Q(broker__icontains=q_raw)
+        )
+
+    broker_f = request.GET.get("broker", "").strip()
+    if broker_f:
+        qs = qs.filter(broker=broker_f)
+
+    st = request.GET.get("status", "").strip()
+    valid_status = {c[0] for c in TradingAccount.STATUS_CHOICES}
+    if st in valid_status:
+        qs = qs.filter(status=st)
+
+    sort_param = request.GET.get("sort", "name")
+    order = TRADING_ACCOUNTS_SORT_FIELDS.get(sort_param, "name")
+    qs = qs.order_by(order, "id")
+
+    try:
+        per_page = int(request.GET.get("per_page", 15) or 15)
+    except ValueError:
+        per_page = 15
+    per_page = max(5, min(per_page, 50))
+
+    paginator = Paginator(qs, per_page)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    brokers_qs = (
+        TradingAccount.objects.filter(owner=owner)
+        .values_list("broker", flat=True)
+        .distinct()
+        .order_by("broker")
+    )
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    return render(
+        request,
+        "trading_accounts_list.html",
+        {
+            "page_obj": page_obj,
+            "broker_choices": brokers_qs,
+            "status_choices": TradingAccount.STATUS_CHOICES,
+            "current_q": q_raw,
+            "current_broker": broker_f,
+            "current_status": st,
+            "current_sort": sort_param,
+            "show_archived": show_archived,
+            "per_page": per_page,
+            "querystring": querystring,
+        },
+    )
+
+
+@login_required
+def edit_trading_account(request, account_id):
+    if not can_manage_trading_accounts(request):
+        messages.error(request, "Access denied.")
+        return redirect("dashboard")
+
+    owner = _get_admin_user(request)
+    account = get_object_or_404(TradingAccount, pk=account_id, owner=owner)
+    valid_status = {c[0] for c in TradingAccount.STATUS_CHOICES}
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()[:100]
+        broker = request.POST.get("broker", "").strip()[:50]
+        account_number = request.POST.get("account_number", "").strip()[:100]
+        if not all([name, broker, account_number]):
+            messages.error(request, "Name, broker, and account number are required.")
+        else:
+            try:
+                bal = float(request.POST.get("account_balance", "") or 0)
+            except ValueError:
+                messages.error(request, "Invalid balance.")
+            else:
+                new_status = request.POST.get("status", "").strip()
+                if new_status in valid_status:
+                    account.status = new_status
+                account.name = name
+                account.broker = broker
+                account.account_number = account_number
+                account.account_balance = bal
+                account.save()
+                messages.success(request, "Account updated.")
+                return redirect("trading_accounts_list")
+
+    return render(
+        request,
+        "edit_trading_account.html",
+        {
+            "account": account,
+            "status_choices": TradingAccount.STATUS_CHOICES,
+        },
+    )
+
+
+@login_required
+@require_POST
+def archive_trading_account(request, account_id):
+    if not can_manage_trading_accounts(request):
+        messages.error(request, "Access denied.")
+        return redirect("dashboard")
+
+    owner = _get_admin_user(request)
+    account = get_object_or_404(TradingAccount, pk=account_id, owner=owner)
+    account.is_archived = not account.is_archived
+    account.archived_at = timezone.now() if account.is_archived else None
+    account.save(update_fields=["is_archived", "archived_at"])
+
+    sel = request.session.get(SELECTED_TRADING_ACCOUNT_SESSION_KEY)
+    if sel == account.id:
+        request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
+
+    if account.is_archived:
+        messages.success(request, f'Account "{account.name}" archived.')
+    else:
+        messages.success(request, f'Account "{account.name}" unarchived.')
+
+    return redirect("trading_accounts_list")
+
+
+# ─────────────────────────────────────────
 # DELETE TRADING ACCOUNT
 # ─────────────────────────────────────────
 
@@ -825,7 +1059,7 @@ def delete_account(request, account_id):
         messages.error(request, "Only admins can delete accounts.")
         return redirect("dashboard")
 
-    owner   = _get_admin_user(request)
+    owner = _get_admin_user(request)
     account = get_object_or_404(TradingAccount, id=account_id, owner=owner)
 
     if request.method == "POST":
@@ -833,7 +1067,7 @@ def delete_account(request, account_id):
         if sel == account.id:
             request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
         account.delete()
-        return redirect("dashboard")
+        return redirect("trading_accounts_list")
 
     trades = Trade.objects.filter(account=account).order_by("-date", "-entry_time")
     trade_count = trades.count()
@@ -848,25 +1082,11 @@ def delete_account(request, account_id):
 
 @login_required
 def change_password(request):
-    # ONLY super admin can change their own password
-    if not _require_super_admin(request):
-        messages.error(request, "Only Super Administrators can change passwords.")
+    """Password changes are handled on User Management; keep URL as a redirect."""
+    if not _require_admin(request):
+        messages.error(request, "Access denied.")
         return redirect("dashboard")
-
-    if request.method == "POST":
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)  # Keep user logged in
-            messages.success(request, "Your password was successfully updated!")
-            return redirect("user_management")
-        else:
-            for error in form.errors.values():
-                messages.error(request, error)
-    else:
-        form = PasswordChangeForm(request.user)
-
-    return render(request, "change_password.html", {"form": form})
+    return redirect(f"{reverse('user_management')}#your-password")
 
 # ─────────────────────────────────────────
 # USER MANAGEMENT
@@ -879,7 +1099,16 @@ def user_management(request):
         messages.error(request, "Access denied.")
         return redirect("dashboard")
 
-    owner = _get_admin_user(request)
+    password_form = PasswordChangeForm(request.user)
+    if request.method == "POST" and request.POST.get("action") == "change_own_password":
+        password_form = PasswordChangeForm(request.user, request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Your password was successfully updated!")
+            return redirect(f"{reverse('user_management')}#your-password")
+        for error in password_form.errors.values():
+            messages.error(request, error)
 
     # Super admin sees ALL users; admin sees users they created
     if request.user.profile.role == "super_admin":
@@ -893,7 +1122,7 @@ def user_management(request):
 
     context = {
         "managed_users": managed_users,
-        "accounts":      TradingAccount.objects.filter(owner=owner),
+        "password_form": password_form,
     }
     return render(request, "user_management.html", context)
 
@@ -976,11 +1205,6 @@ def edit_user(request, user_id):
             messages.error(request, "You can only edit users you created.")
             return redirect("user_management")
 
-        # Regular admins cannot reset passwords (only change roles)
-        if request.method == "POST" and request.POST.get("action") == "reset_password":
-            messages.error(request, "Only Super Administrators can reset passwords.")
-            return redirect("user_management")
-
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -999,9 +1223,8 @@ def edit_user(request, user_id):
                 messages.error(request, "Invalid role.")
 
         elif action == "reset_password":
-            # Only super_admin can reset passwords
-            if request.user.profile.role != "super_admin":
-                messages.error(request, "Only Super Administrators can reset passwords.")
+            if not _user_can_reset_target_password(request, target_profile):
+                messages.error(request, "You cannot reset this user's password.")
             else:
                 new_password = request.POST.get("new_password", "")
                 if len(new_password) < 6:
@@ -1022,7 +1245,7 @@ def edit_user(request, user_id):
         "target_user":    target_user,
         "target_profile": target_profile,
         "allowed_roles":  allowed_roles,
-        "can_reset_password": request.user.profile.role == "super_admin",  # Add this flag
+        "can_reset_password": _user_can_reset_target_password(request, target_profile),
     })
 @login_required
 def delete_user(request, user_id):

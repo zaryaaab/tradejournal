@@ -1,8 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class TradingAccount(models.Model):
+    STATUS_ACTIVE = "active"
+    STATUS_EVALUATION = "evaluation"
+    STATUS_FUNDED = "funded"
+    STATUS_BLOWN = "blown"
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, "Active"),
+        (STATUS_EVALUATION, "Evaluation"),
+        (STATUS_FUNDED, "Funded"),
+        (STATUS_BLOWN, "Blown"),
+    ]
+
     # ── owner is ALWAYS the admin/super-admin (Dana).
     #    Trades uploaded by an Assistant are still stored under Dana's account.
     owner = models.ForeignKey(
@@ -34,6 +46,15 @@ class TradingAccount(models.Model):
 
     # Used to calculate daily/monthly return percentages on the calendar
     account_balance = models.FloatField(default=50000.0)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+    )
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"{self.name} ({self.account_number})"

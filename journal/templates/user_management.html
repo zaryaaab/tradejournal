@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,262 +8,111 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
     <style>
         :root {
-            --pink:       #D96B8A;
-            --pink-light: #EFA8BC;
-            --pink-soft:  #F5C8D6;
-            --pink-mid:   #C94E6E;
-            --pink-deep:  #A8324F;
-            --gold:       #D4A96A;
-            --cream:      #FDF0F3;
-            --white:      #FFFFFF;
-            --text:       #3A2030;
-            --text-soft:  #7A4A5C;
-            --green:      #5DB882;
-            --green-bg:   #EAF7EF;
-            --red:        #E07070;
-            --red-bg:     #FDEAEA;
+            --pink: #D96B8A; --pink-light: #EFA8BC; --pink-soft: #F5C8D6;
+            --pink-mid: #C94E6E; --pink-deep: #A8324F; --gold: #D4A96A;
+            --cream: #FDF0F3; --white: #FFFFFF; --text: #3A2030; --text-soft: #7A4A5C;
+            --green: #5DB882; --green-bg: #EAF7EF; --red: #E07070; --red-bg: #FDEAEA;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; }
 
-        body {
-            font-family: 'Nunito', sans-serif;
-            background: var(--cream);
-            color: var(--text);
-            display: flex;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: -120px; right: -120px;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(244,167,185,0.22) 0%, transparent 65%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ── Sidebar (reused from dashboard) ── */
-        .sidebar {
-            width: 248px;
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            flex-shrink: 0;
-            background: var(--white);
-            border-right: 1.5px solid var(--pink-light);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 10;
-        }
-
-        .logo {
-            padding: 32px 24px 24px;
-            border-bottom: 1.5px solid var(--pink-light);
-            flex-shrink: 0;
-        }
-
-        .logo-icon {
-            width: 38px; height: 38px;
-            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
-            border-radius: 13px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 14px rgba(217,107,138,0.28);
-        }
-
-        .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 21px; font-weight: 600;
-            color: var(--text);
-            line-height: 1.15;
-        }
-        .logo-name em { font-style: italic; color: var(--pink-deep); }
-
-        .logo-tagline {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: var(--gold);
-            margin-top: 6px;
-            font-weight: 600;
-        }
-
-        .nav { padding: 20px 12px; flex: 1; }
-
-        .nav-section-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.22em;
-            color: var(--pink);
-            font-weight: 600;
-            padding: 0 12px;
-            margin-bottom: 8px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            padding: 11px 14px;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-soft);
-            text-decoration: none;
-            transition: all 0.22s;
-            margin-bottom: 3px;
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--pink-soft) 0%, rgba(244,167,185,0.18) 100%);
-            color: var(--pink-deep);
-            font-weight: 600;
-        }
-
-        .nav-item:hover:not(.active) { background: var(--pink-soft); color: var(--pink-mid); }
-
-        .nav-icon {
-            width: 17px; height: 17px;
-            stroke: currentColor; fill: none;
-            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-            flex-shrink: 0;
-        }
-
-        .active-dot {
-            width: 6px; height: 6px;
-            background: var(--pink-deep);
-            border-radius: 50%;
-            margin-left: auto;
-        }
-
-        .sidebar-bottom {
-            padding: 14px;
-            border-top: 1.5px solid var(--pink-light);
-            background: var(--white);
-        }
-
-        .nav-user {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 14px;
-            margin-bottom: 4px;
-        }
-
-        .nav-user-avatar {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 700; color: white;
-            flex-shrink: 0;
-        }
-
-        .nav-user-name { font-size: 13px; font-weight: 600; color: var(--text); }
-        .nav-user-role { font-size: 10px; color: var(--pink); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
-
-        .nav-logout {
-            width: 100%; background: none; border: none;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
-            color: var(--text-soft); text-align: left;
-        }
-        .nav-logout:hover { background: #FDE8ED !important; color: var(--pink-deep) !important; }
-
-        /* ── Main ── */
-        .main {
-            flex: 1; min-width: 0;
-            height: 100vh; overflow-y: auto;
-            padding: 40px 44px 60px;
-            position: relative; z-index: 1;
-        }
-
-        .main::-webkit-scrollbar { width: 5px; }
-        .main::-webkit-scrollbar-thumb { background: var(--pink-light); border-radius: 3px; }
-
-        /* ── Page header ── */
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 32px;
         }
-
         .page-header h1 {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 44px; font-weight: 300; line-height: 1;
+            font-size: 44px;
+            font-weight: 300;
+            line-height: 1;
         }
         .page-header h1 em { font-style: italic; color: var(--pink-deep); }
-
         .page-header-sub {
-            font-size: 12.5px; color: var(--text-soft);
-            margin-top: 7px; letter-spacing: 0.04em;
+            font-size: 12.5px;
+            color: var(--text-soft);
+            margin-top: 7px;
+            letter-spacing: 0.04em;
+            max-width: 640px;
+            line-height: 1.5;
         }
 
-        /* ── Create button ── */
         .create-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: var(--pink-deep); color: white;
-            padding: 12px 22px; border-radius: 50px;
-            font-size: 12.5px; font-weight: 600;
-            text-decoration: none; letter-spacing: 0.04em;
-            transition: all 0.25s; flex-shrink: 0;
-            box-shadow: 0 6px 18px rgba(217,107,138,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--pink-deep);
+            color: white;
+            padding: 12px 22px;
+            border-radius: 50px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: all 0.25s;
+            flex-shrink: 0;
+            box-shadow: 0 6px 18px rgba(217, 107, 138, 0.3);
         }
         .create-btn:hover { background: var(--pink-mid); transform: translateY(-2px); }
 
-        /* ── Section header ── */
         .section-header {
-            display: flex; align-items: center; gap: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
             margin-bottom: 14px;
         }
         .section-title {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 22px; font-style: italic; color: var(--text);
+            font-size: 22px;
+            font-style: italic;
+            color: var(--text);
             white-space: nowrap;
         }
-        .section-line { flex: 1; height: 1px; background: linear-gradient(to right, var(--pink-light), transparent); }
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--pink-light), transparent);
+        }
 
-        /* ── Messages ── */
         .msg { padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 20px; }
         .msg-success { background: var(--green-bg); color: #2D7A5F; border: 1px solid #A8DFC0; }
-        .msg-error   { background: var(--red-bg);   color: #B03030; border: 1px solid #F0AAAA; }
+        .msg-error { background: var(--red-bg); color: #B03030; border: 1px solid #F0AAAA; }
 
-        /* ── User table ── */
         .table-card {
             background: var(--white);
             border-radius: 24px;
             border: 1px solid var(--pink-light);
             overflow: hidden;
             margin-bottom: 28px;
-            box-shadow: 0 8px 32px rgba(168,50,79,0.07);
+            box-shadow: 0 8px 32px rgba(168, 50, 79, 0.07);
         }
-
         .table-card-header {
             padding: 20px 28px;
             border-bottom: 1px solid var(--pink-soft);
-            display: flex; align-items: center; justify-content: space-between;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-
         .table-card-title {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 20px; font-weight: 600; color: var(--text);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
         }
         .table-card-title em { font-style: italic; color: var(--pink-deep); }
-
         .count-badge {
-            background: #FBE8EE; color: var(--pink-deep);
+            background: #FBE8EE;
+            color: var(--pink-deep);
             border: 1px solid var(--pink-light);
-            border-radius: 20px; padding: 3px 12px;
-            font-size: 11px; font-weight: 600;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 11px;
+            font-weight: 600;
         }
-
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
         thead th {
             background: #FDF4F7;
             padding: 12px 20px;
@@ -274,144 +124,156 @@
             font-weight: 600;
             border-bottom: 1px solid var(--pink-soft);
         }
-
         tbody tr { border-bottom: 1px solid #FAF0F3; transition: background 0.15s; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: #FDF6F8; }
         tbody td { padding: 14px 20px; color: var(--text); vertical-align: middle; }
 
-        /* ── Role badges ── */
         .role-badge {
             display: inline-block;
             padding: 3px 12px;
             border-radius: 20px;
-            font-size: 11px; font-weight: 600;
+            font-size: 11px;
+            font-weight: 600;
             letter-spacing: 0.05em;
         }
         .role-super_admin { background: #2A1A1F; color: #fff; }
-        .role-admin       { background: var(--pink-deep); color: #fff; }
-        .role-assistant   { background: #FFF3CD; color: #7A5A00; border: 1px solid #F0DFA0; }
-        .role-client      { background: var(--green-bg); color: #2D7A5F; border: 1px solid #A8DFC0; }
+        .role-admin { background: var(--pink-deep); color: #fff; }
+        .role-assistant { background: #FFF3CD; color: #7A5A00; border: 1px solid #F0DFA0; }
+        .role-client { background: var(--green-bg); color: #2D7A5F; border: 1px solid #A8DFC0; }
 
-        /* ── Action buttons ── */
-        .action-btns { display: flex; gap: 8px; align-items: center; }
-
+        .action-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .btn-edit {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 6px 14px; border-radius: 10px;
-            font-size: 11.5px; font-weight: 600;
-            background: var(--cream); color: var(--text-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: var(--cream);
+            color: var(--text-soft);
             border: 1px solid var(--pink-light);
-            text-decoration: none; transition: all 0.2s;
+            text-decoration: none;
+            transition: all 0.2s;
         }
         .btn-edit:hover { background: var(--pink-soft); color: var(--pink-deep); border-color: var(--pink-deep); }
-
         .btn-delete {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 6px 14px; border-radius: 10px;
-            font-size: 11.5px; font-weight: 600;
-            background: var(--red-bg); color: #B03030;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: var(--red-bg);
+            color: #B03030;
             border: 1px solid #F0AAAA;
-            text-decoration: none; transition: all 0.2s;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
+            text-decoration: none;
+            transition: all 0.2s;
         }
         .btn-delete:hover { background: #F8CCCC; border-color: #D07070; }
 
-        /* ── Empty state ── */
         .empty-state {
-            padding: 48px; text-align: center;
-            color: var(--text-soft); font-size: 13px; font-style: italic;
+            padding: 48px;
+            text-align: center;
+            color: var(--text-soft);
+            font-size: 13px;
+            font-style: italic;
         }
 
-        /* ── Accounts table ── */
-        .account-broker {
-            font-size: 11px; color: var(--text-soft);
+        .password-card {
+            background: var(--white);
+            border-radius: 24px;
+            border: 1px solid var(--pink-light);
+            padding: 24px 28px 28px;
+            margin-bottom: 28px;
+            scroll-margin-top: 24px;
         }
+        .password-card h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .password-card h2 em { font-style: italic; color: var(--pink-deep); }
+        .password-card-sub {
+            font-size: 12.5px;
+            color: var(--text-soft);
+            margin-bottom: 20px;
+            line-height: 1.45;
+        }
+        .password-card .form-group { margin-bottom: 16px; }
+        .password-card label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--pink-deep);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .password-card input[type="password"] {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--pink-light);
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+        }
+        .password-card input:focus {
+            outline: none;
+            border-color: var(--pink-mid);
+        }
+        .password-card .help-text {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+        .password-card .form-errors,
+        .password-card ul.errorlist {
+            color: #B03030;
+            font-size: 12px;
+            margin-bottom: 12px;
+            list-style: none;
+            padding: 0;
+        }
+        .password-card .btn-submit {
+            margin-top: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--pink-deep);
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .password-card .btn-submit:hover { background: var(--pink-mid); }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(14px); }
-            to   { opacity: 1; transform: translateY(0); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .table-card { animation: fadeUp 0.4s ease both; }
-        .table-card:nth-child(2) { animation-delay: 0.08s; }
+        .table-card, .password-card { animation: fadeUp 0.4s ease both; }
+        .table-card:nth-of-type(1) { animation-delay: 0.04s; }
     </style>
 </head>
+<body class="has-app-shell">
+{% include "partials/app_sidebar.html" %}
 
-<body>
-
-<!-- ── Sidebar ── -->
-<aside class="sidebar">
-    <div class="logo">
-        <div class="logo-icon">🌸</div>
-        <div class="logo-name">Dana's <em>Trading</em> Journal</div>
-        <div class="logo-tagline">God · Patience · Discipline</div>
-    </div>
-
-    <nav class="nav">
-        <div class="nav-section-label">Menu</div>
-
-        <a href="/" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendar
-        </a>
-
-        <a href="/upload/" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Import Trades
-        </a>
-
-        <a href="/analytics/" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Analytics
-        </a>
-
-        <a href="/users/" class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            Users
-            <span class="active-dot"></span>
-        </a>
-    </nav>
-
-    <<div class="sidebar-bottom">
-    <div class="nav-user">
-        <div class="nav-user-avatar">
-            {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
-        </div>
-        <div>
-            <div class="nav-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-            <div class="nav-user-role">{{ request.user.profile.get_role_display|default:"Admin" }}</div>
-        </div>
-    </div>
-    
-    <!-- ONLY show Change Password link for Super Admin -->
-    {% if request.user.profile.role == "super_admin" %}
-    <a href="{% url 'change_password' %}" class="nav-item" style="margin-top: 8px;">
-        <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
-        </svg>
-        Change Password
-    </a>
-    {% endif %}
-    
-    <form method="POST" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="nav-item nav-logout">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sign Out
-        </button>
-    </form>
-</div>
-</aside>
-
-<!-- ── Main ── -->
 <main class="main">
-
     <div class="page-header">
         <div>
             <h1>User <em>Management</em></h1>
-            <div class="page-header-sub">Create, manage, and control access for all users</div>
+            <div class="page-header-sub">
+                <strong>Platform users</strong> are logins and roles (below). <strong>Broker accounts</strong> (Rithmic, Tradovate, etc.) are a separate list—import targets and calendar scope—on
+                <a href="{% url 'trading_accounts_list' %}" style="color:var(--pink-deep);font-weight:600;">Broker accounts</a>.
+            </div>
         </div>
         <a href="{% url 'create_user' %}" class="create-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -427,15 +289,43 @@
         {% endfor %}
     {% endif %}
 
-    <!-- ── Users table ── -->
+    <div id="your-password" class="password-card">
+        <h2>Your <em>password</em></h2>
+        <p class="password-card-sub">Change the password for your own login (<strong>@{{ request.user.username }}</strong>). To reset someone else’s password, open their user → Edit.</p>
+        {% if password_form.non_field_errors %}
+        <div class="form-errors">{{ password_form.non_field_errors }}</div>
+        {% endif %}
+        <form method="post" action="{% url 'user_management' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="change_own_password">
+            <div class="form-group">
+                <label for="id_old_password">Current password</label>
+                {{ password_form.old_password.errors }}
+                {{ password_form.old_password }}
+            </div>
+            <div class="form-group">
+                <label for="id_new_password1">New password</label>
+                {{ password_form.new_password1.errors }}
+                {{ password_form.new_password1 }}
+                <div class="help-text">Choose a strong password. Django may reject passwords that are too short or too common.</div>
+            </div>
+            <div class="form-group">
+                <label for="id_new_password2">Confirm new password</label>
+                {{ password_form.new_password2.errors }}
+                {{ password_form.new_password2 }}
+            </div>
+            <button type="submit" class="btn-submit">Update my password</button>
+        </form>
+    </div>
+
     <div class="section-header">
-        <div class="section-title">Active Users</div>
+        <div class="section-title">Platform users</div>
         <div class="section-line"></div>
     </div>
 
     <div class="table-card">
         <div class="table-card-header">
-            <div class="table-card-title">Platform <em>Users</em></div>
+            <div class="table-card-title">Team <em>&amp; access</em></div>
             <span class="count-badge">{{ managed_users|length }} user{{ managed_users|length|pluralize }}</span>
         </div>
 
@@ -484,60 +374,23 @@
             </tbody>
         </table>
         {% else %}
-        <div class="empty-state">No users yet — click "Create User" to add your first Assistant or Client.</div>
+        <div class="empty-state">No users yet — click “Create User” to add your first Assistant or Client.</div>
         {% endif %}
     </div>
 
-    <!-- ── Trading Accounts table ── -->
     <div class="section-header" style="margin-top:16px;">
-        <div class="section-title">Trading Accounts</div>
+        <div class="section-title">Broker accounts</div>
         <div class="section-line"></div>
     </div>
 
-    <div class="table-card">
-        <div class="table-card-header">
-            <div class="table-card-title">Linked <em>Accounts</em></div>
-            <span class="count-badge">{{ accounts|length }} account{{ accounts|length|pluralize }}</span>
-        </div>
-
-        {% if accounts %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Account Name</th>
-                    <th>Broker</th>
-                    <th>Account #</th>
-                    <th>Balance</th>
-                    <th>Uploaded By</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for acc in accounts %}
-                <tr>
-                    <td><strong>{{ acc.name }}</strong></td>
-                    <td><span class="account-broker">{{ acc.broker }}</span></td>
-                    <td style="font-family:monospace; font-size:12px; color:var(--text-soft);">#{{ acc.account_number }}</td>
-                    <td>${{ acc.account_balance|floatformat:0 }}</td>
-                    <td style="font-size:12px; color:var(--text-soft);">
-                        {% if acc.uploaded_by %}{{ acc.uploaded_by.get_full_name|default:acc.uploaded_by.username }}{% else %}—{% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'delete_account' acc.id %}" class="btn-delete">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">No trading accounts yet — import a CSV to create one.</div>
-        {% endif %}
+    <div class="table-card" style="padding:24px 28px;">
+        <p style="font-size:13px;color:var(--text-soft);line-height:1.55;margin-bottom:14px;">
+            The master list for broker accounts (search, filters, status, archive, delete) lives on the Broker accounts page. The sidebar shows a compact overview and scope picker.
+        </p>
+        <a href="{% url 'trading_accounts_list' %}" class="btn-edit" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;text-decoration:none;font-weight:600;">
+            Open broker accounts →
+        </a>
     </div>
-
 </main>
-
 </body>
 </html>

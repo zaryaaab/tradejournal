@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Account — Dana's Trading Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <style>
+        :root {
+            --pink: #D96B8A; --pink-light: #EFA8BC; --pink-soft: #F5C8D6;
+            --pink-deep: #A8324F; --cream: #FDF0F3; --white: #FFFFFF;
+            --text: #3A2030; --text-soft: #7A4A5C;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; margin-bottom: 8px; }
+        h1 em { font-style: italic; color: var(--pink-deep); }
+        .card {
+            max-width: 480px; background: var(--white); border: 1.5px solid var(--pink-light);
+            border-radius: 22px; padding: 28px 32px; margin-top: 24px;
+        }
+        label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--pink-deep); font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+        label:first-of-type { margin-top: 0; }
+        input, select {
+            width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--pink-light);
+            font-family: inherit; font-size: 14px;
+        }
+        .actions { display: flex; gap: 12px; margin-top: 24px; }
+        button[type="submit"] {
+            background: var(--pink-deep); color: white; border: none; padding: 12px 24px;
+            border-radius: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .btn-cancel {
+            display: inline-flex; align-items: center; padding: 12px 20px; border-radius: 12px;
+            border: 1.5px solid var(--pink-light); color: var(--text-soft); text-decoration: none; font-size: 14px;
+        }
+    </style>
+</head>
+<body class="has-app-shell">
+{% include "partials/app_sidebar.html" %}
+<main class="main">
+    <h1>Edit <em>Account</em></h1>
+    <p style="color:var(--text-soft);font-size:13px;">Update broker account details shown in the journal and calendar.</p>
+
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Name</label>
+            <input id="name" name="name" required maxlength="100" value="{{ account.name }}">
+
+            <label for="broker">Broker</label>
+            <input id="broker" name="broker" required maxlength="50" value="{{ account.broker }}">
+
+            <label for="account_number">Account number</label>
+            <input id="account_number" name="account_number" required maxlength="100" value="{{ account.account_number }}">
+
+            <label for="account_balance">Starting / reference balance</label>
+            <input id="account_balance" name="account_balance" type="number" step="any" value="{{ account.account_balance }}">
+
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if account.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="actions">
+                <button type="submit">Save changes</button>
+                <a href="{% url 'trading_accounts_list' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>
