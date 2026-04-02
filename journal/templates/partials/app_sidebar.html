@@ -41,14 +41,14 @@
             {% if request.resolver_match.url_name == 'analytics' %}<span class="active-dot"></span>{% endif %}
         </a>
 
-        {% if can_manage_trading_accounts %}
-        <a href="{% url 'trading_accounts_list' %}" class="nav-item{% if request.resolver_match.url_name == 'trading_accounts_list' or request.resolver_match.url_name == 'edit_trading_account' %} active{% endif %}" title="Broker accounts: imports, balances, archive">
+        {% if can_view_trading_accounts %}
+        <a href="{% url 'trading_accounts_list' %}" class="nav-item{% if request.resolver_match.url_name == 'trading_accounts_list' or request.resolver_match.url_name == 'edit_trading_account' or request.resolver_match.url_name == 'delete_account' %} active{% endif %}" title="Broker accounts: list, imports, balances">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <rect x="2" y="4" width="20" height="16" rx="2"/>
                 <path d="M6 8h4M6 12h8M6 16h5"/>
             </svg>
             <span class="nav-label">Broker accounts</span>
-            {% if request.resolver_match.url_name == 'trading_accounts_list' or request.resolver_match.url_name == 'edit_trading_account' %}<span class="active-dot"></span>{% endif %}
+            {% if request.resolver_match.url_name == 'trading_accounts_list' or request.resolver_match.url_name == 'edit_trading_account' or request.resolver_match.url_name == 'delete_account' %}<span class="active-dot"></span>{% endif %}
         </a>
         {% endif %}
 

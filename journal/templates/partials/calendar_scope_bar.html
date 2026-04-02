@@ -1,0 +1,17 @@
+{% if show_trading_accounts_sidebar %}
+<div class="calendar-scope-bar">
+    <form method="post" action="{% url 'select_trading_account' %}" class="calendar-scope-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+        <label class="calendar-scope-label" for="calendar-scope-select">Calendar &amp; analytics scope</label>
+        <select name="trading_account_id" id="calendar-scope-select" class="calendar-scope-select" onchange="this.form.submit()">
+            <option value="all"{% if not selected_trading_account_id %} selected{% endif %}>All active accounts</option>
+            {% for acc in sidebar_trading_accounts_all %}
+            <option value="{{ acc.id }}"{% if selected_trading_account_id == acc.id %} selected{% endif %}>
+                {{ acc.name }} — {{ acc.broker }} ({{ acc.account_number }})
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+{% endif %}

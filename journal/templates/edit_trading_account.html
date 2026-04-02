@@ -67,6 +67,9 @@
                 {% endfor %}
             </select>
 
+            <label for="tags">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-soft);">(comma-separated)</span></label>
+            <input id="tags" name="tags" maxlength="500" value="{% for t in account.tags %}{{ t }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="e.g. Apex, TradeDay">
+
             <div class="actions">
                 <button type="submit">Save changes</button>
                 <a href="{% url 'trading_accounts_list' %}" class="btn-cancel">Cancel</a>

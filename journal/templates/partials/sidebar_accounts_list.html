@@ -1,25 +1,15 @@
-<div class="nav-section-label sidebar-overview-label">Broker accounts · overview</div>
+<div class="nav-section-label sidebar-overview-label">Broker accounts</div>
 <p class="sidebar-overview-meta">
     <strong>{{ sidebar_trading_accounts_total }}</strong> active
     {% if sidebar_trading_accounts_archived_count %}
     · {{ sidebar_trading_accounts_archived_count }} archived
     {% endif %}
 </p>
-{% if can_manage_trading_accounts %}
+{% if can_view_trading_accounts %}
 <div class="sidebar-overview-link-wrap">
-    <a href="{% url 'trading_accounts_list' %}" class="sidebar-overview-link">Manage all broker accounts →</a>
+    <a href="{% url 'trading_accounts_list' %}" class="sidebar-overview-link">Open broker accounts →</a>
 </div>
+<p class="sidebar-overview-hint" style="font-size:11px;color:#7A4A5C;margin-top:8px;line-height:1.4;">
+    Set calendar &amp; analytics scope on the calendar, day, or analytics page.
+</p>
 {% endif %}
-<form method="post" action="{% url 'select_trading_account' %}" class="sidebar-scope-form">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.path }}">
-    <label class="sidebar-scope-label" for="sidebar-scope-select">Calendar &amp; analytics scope</label>
-    <select name="trading_account_id" id="sidebar-scope-select" class="sidebar-scope-select" onchange="this.form.submit()">
-        <option value="all"{% if not selected_trading_account_id %} selected{% endif %}>All active accounts</option>
-        {% for acc in sidebar_trading_accounts_all %}
-        <option value="{{ acc.id }}"{% if selected_trading_account_id == acc.id %} selected{% endif %}>
-            {{ acc.name }} — {{ acc.broker }} ({{ acc.account_number }})
-        </option>
-        {% endfor %}
-    </select>
-</form>

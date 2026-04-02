@@ -75,7 +75,7 @@
 <main class="main">
     <div class="header">
         <h1>Trading <em>Accounts</em></h1>
-        <p class="header-sub">This is the <strong>master list</strong> of broker accounts for imports and calendar/analytics scope. Search, filter, sort, and paginate as your list grows. Archived accounts are hidden from imports and the sidebar overview. Deleting an account permanently removes all trades and screenshots tied to it.</p>
+        <p class="header-sub">This is the <strong>master list</strong> of broker accounts for imports and calendar/analytics scope. Search, filter, sort, and paginate as your list grows. Archived accounts are hidden from imports. Removing an account hides it for seven days (recoverable by support), then it is purged with all trades and screenshots.</p>
     </div>
 
     <form class="filters" method="get" action="">
@@ -102,6 +102,15 @@
             </select>
         </div>
         <div>
+            <label for="tag">Tag</label>
+            <select id="tag" name="tag">
+                <option value="">All</option>
+                {% for t in tag_choices %}
+                <option value="{{ t }}" {% if current_tag == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
             <label for="sort">Sort</label>
             <select id="sort" name="sort">
                 <option value="name" {% if current_sort == "name" %}selected{% endif %}>Name A–Z</option>
@@ -112,6 +121,7 @@
                 <option value="created_at" {% if current_sort == "created_at" %}selected{% endif %}>Created oldest</option>
                 <option value="-created_at" {% if current_sort == "-created_at" %}selected{% endif %}>Created newest</option>
                 <option value="status" {% if current_sort == "status" %}selected{% endif %}>Status</option>
+                <option value="account_number" {% if current_sort == "account_number" %}selected{% endif %}>Account # A–Z</option>
             </select>
         </div>
         <div>
@@ -137,10 +147,11 @@
                     <th>Name</th>
                     <th>Broker</th>
                     <th>Account #</th>
+                    <th>Tags</th>
                     <th>Balance</th>
                     <th>Status</th>
                     <th>Archived</th>
-                    <th>Actions</th>
+                    {% if can_manage_trading_accounts %}<th>Actions</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -149,6 +160,7 @@
                     <td><strong>{{ acc.name }}</strong></td>
                     <td>{{ acc.broker }}</td>
                     <td style="font-family:monospace;font-size:12px;color:var(--text-soft);">{{ acc.account_number }}</td>
+                    <td style="font-size:11px;color:var(--text-soft);">{% for t in acc.tags %}<span class="badge badge-arch" style="margin:2px 4px 2px 0;">{{ t }}</span>{% empty %}—{% endfor %}</td>
                     <td>${{ acc.account_balance|floatformat:0 }}</td>
                     <td>
                         {% if acc.status == "active" %}<span class="badge badge-active">Active</span>
@@ -158,6 +170,7 @@
                         {% else %}{{ acc.get_status_display }}{% endif %}
                     </td>
                     <td>{% if acc.is_archived %}<span class="badge badge-arch">Yes</span>{% else %}—{% endif %}</td>
+                    {% if can_manage_trading_accounts %}
                     <td>
                         <div class="actions">
                             <a href="{% url 'edit_trading_account' acc.id %}" class="act-edit">Edit</a>
@@ -168,6 +181,7 @@
                             </form>
                         </div>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

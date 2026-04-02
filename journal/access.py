@@ -83,6 +83,31 @@ def can_manage_trading_accounts(request) -> bool:
         return False
 
 
+def can_view_trading_accounts(request) -> bool:
+    """Read-only broker list + import picker (assistant, admin, super_admin)."""
+    if not request.user.is_authenticated:
+        return False
+    try:
+        return request.user.profile.role in ("super_admin", "admin", "assistant")
+    except Exception:
+        return False
+
+
+def user_ids_in_principal_org(principal_user: User) -> set[int]:
+    """BFS over created_by graph starting at principal (includes principal id)."""
+    # Always query auth.User — never use type(principal_user): request.user can be a
+    # SimpleLazyObject, whose type is not the concrete User model.
+    seen: set[int] = {principal_user.pk}
+    stack = [principal_user]
+    while stack:
+        u = stack.pop()
+        for child in User.objects.filter(profile__created_by=u).select_related("profile"):
+            if child.id not in seen:
+                seen.add(child.id)
+                stack.append(child)
+    return seen
+
+
 def resolve_selected_trading_account_id(request, owner: User) -> int | None:
     """
     Validated session id for filtering trades, or None = all accounts.

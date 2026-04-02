@@ -3,6 +3,13 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+class TradingAccountActiveManager(models.Manager):
+    """Excludes soft-deleted rows (deleted_at set)."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
 class TradingAccount(models.Model):
     STATUS_ACTIVE = "active"
     STATUS_EVALUATION = "evaluation"
@@ -55,6 +62,21 @@ class TradingAccount(models.Model):
     is_archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    tags = models.JSONField(default=list, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = TradingAccountActiveManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="journal_tradingaccount_owner_name_alive_uniq",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.account_number})"
@@ -274,6 +296,21 @@ class UserProfile(models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name="created_users",
+    )
+
+    default_import_trading_account = models.ForeignKey(
+        "TradingAccount",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="profiles_default_import",
+    )
+    last_import_trading_account = models.ForeignKey(
+        "TradingAccount",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="profiles_last_import",
     )
 
     def is_super_admin(self):

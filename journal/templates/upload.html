@@ -280,6 +280,45 @@
             transition: color 0.2s;
         }
         .back-link:hover { color: #A8324F; }
+
+        .import-target-box {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .import-target-box label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #A8324F;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .import-target-box select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1.5px solid #E89BB5;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            background: #FEF8F0;
+            color: #2A1A1F;
+        }
+        .import-target-hint {
+            font-size: 11.5px;
+            color: #7A4A5C;
+            margin-top: 8px;
+            line-height: 1.45;
+        }
+        .import-default-row {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: #3A2030;
+        }
+        .import-default-row input { width: 16px; height: 16px; accent-color: #A8324F; }
     </style>
 </head>
 
@@ -311,6 +350,27 @@
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
+
+            <div class="import-target-box">
+                <label for="import_trading_account_id">Import into broker account</label>
+                {% if import_accounts %}
+                <select name="import_trading_account_id" id="import_trading_account_id" required>
+                    {% for acc in import_accounts %}
+                    <option value="{{ acc.id }}"{% if selected_import_account_id == acc.id %} selected{% endif %}>
+                        {{ acc.name }} — {{ acc.broker }} ({{ acc.account_number }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="import-target-hint">Used as the default target for <strong>performance</strong> CSVs. Rithmic and Tradovate files still follow the account column; your choice updates last-used and optional default below.</p>
+                {% else %}
+                <p class="import-target-hint">No broker accounts yet. Your first <strong>Rithmic</strong> or <strong>Tradovate</strong> import will create them from the file. For <strong>performance</strong> CSVs, import one of those first, then return here.</p>
+                <input type="hidden" name="import_trading_account_id" value="">
+                {% endif %}
+                <label class="import-default-row">
+                    <input type="checkbox" name="set_default_import" value="1">
+                    Save selection as my default for future imports
+                </label>
+            </div>
 
             <div class="drop-zone" id="dropZone">
                 <input type="file" name="file" id="fileInput" accept=".csv">

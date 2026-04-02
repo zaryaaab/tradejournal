@@ -238,6 +238,47 @@
     border-color: var(--pink-mid);
 }
 
+.calendar-scope-bar {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--white);
+    border: 1.5px solid var(--pink-light);
+    border-radius: 18px;
+    max-width: 720px;
+}
+
+.calendar-scope-form {
+    margin: 0;
+}
+
+.calendar-scope-label {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--pink);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.calendar-scope-select {
+    width: 100%;
+    max-width: 520px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1.5px solid var(--pink-soft);
+    background: var(--cream);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.calendar-scope-select:focus {
+    outline: none;
+    border-color: var(--pink-mid);
+}
+
 .account-pick-form { margin: 0 0 6px 0; }
 
 .account-pick-btn {

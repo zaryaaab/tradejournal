@@ -520,6 +520,10 @@
 
 <div class="page">
 
+    {% if show_trading_accounts_sidebar %}
+    {% include "partials/calendar_scope_bar.html" %}
+    {% endif %}
+
     <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
 

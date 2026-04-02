@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete Account — Dana's Trading Journal</title>
+    <title>Remove Account — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -330,8 +330,8 @@
         <div class="header-top">
             <div class="warning-icon">🗑️</div>
             <div class="header-text">
-                <h1>Delete <em>Account</em></h1>
-                <p>Review every trade listed below carefully before confirming. This action is permanent and cannot be undone.</p>
+                <h1>Remove <em>Account</em></h1>
+                <p>Review every trade listed below. The account will be hidden immediately; trades stay until the account is permanently purged after seven days unless restored by support.</p>
             </div>
         </div>
 
@@ -370,17 +370,17 @@
         </div>
 
         <div class="warning-list">
-            <span>{{ trade_count }} trade{{ trade_count|pluralize }} permanently deleted</span>
-            <span>All attached screenshots removed</span>
-            <span>Account balance &amp; broker settings lost</span>
-            <span>Cannot be undone</span>
+            <span>Account hidden from lists and imports</span>
+            <span>{{ trade_count }} trade{{ trade_count|pluralize }} removed from calendar after purge</span>
+            <span>Screenshots deleted with the account at purge</span>
+            <span>Type DELETE below to confirm</span>
         </div>
     </div>
 
     <!-- ── Trades table ── -->
     <div class="trades-card">
         <div class="trades-header">
-            <h2>Trades that will be deleted</h2>
+            <h2>Trades tied to this account</h2>
             <span class="count-badge">{{ trade_count }} trade{{ trade_count|pluralize }}</span>
         </div>
 
@@ -442,8 +442,10 @@
     <!-- ── Action buttons ── -->
     <div class="actions-card">
         <a href="{% url 'trading_accounts_list' %}" class="btn-cancel">← Cancel, keep my account</a>
-        <form method="POST" style="flex:1; display:flex;">
+        <form method="POST" style="flex:1; display:flex; flex-direction:column; gap:12px;">
             {% csrf_token %}
+            <label for="confirm_delete" style="font-size:12px;color:#7A4A5C;">Type <strong style="color:#2A1A1F;">DELETE</strong> to confirm</label>
+            <input type="text" name="confirm_delete" id="confirm_delete" autocomplete="off" placeholder="DELETE" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #E89BB5;font-family:'DM Sans',sans-serif;font-size:14px;">
             <button type="submit" class="btn-delete" style="width:100%;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
@@ -451,7 +453,7 @@
                     <path d="M10 11v6"/><path d="M14 11v6"/>
                     <path d="M9 6V4h6v2"/>
                 </svg>
-                Yes, permanently delete this account &amp; {{ trade_count }} trade{{ trade_count|pluralize }}
+                Yes, remove this account ({{ trade_count }} trade{{ trade_count|pluralize }})
             </button>
         </form>
     </div>
