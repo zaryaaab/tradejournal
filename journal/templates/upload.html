@@ -75,65 +75,6 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Success Message Styles */
-        .success-message {
-            background: #E8F5E9;
-            border-left: 4px solid #4CAF50;
-            border-radius: 12px;
-            padding: 14px 18px;
-            margin-bottom: 28px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideDown 0.4s ease-out;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .success-icon {
-            font-size: 22px;
-            background: #4CAF50;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .success-text {
-            flex: 1;
-        }
-
-        .success-text strong {
-            display: block;
-            color: #2E7D32;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .success-text span {
-            font-size: 12px;
-            color: #555;
-        }
-
-        .close-success {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            color: #999;
-            padding: 0 4px;
-        }
-
-        .close-success:hover {
-            color: #333;
-        }
-
         .brand {
             text-align: center;
             margin-bottom: 36px;
@@ -281,44 +222,28 @@
         }
         .back-link:hover { color: #A8324F; }
 
-        .import-target-box {
-            margin-bottom: 24px;
-            text-align: left;
-        }
-        .import-target-box label {
-            display: block;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: #A8324F;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .import-target-box select {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 14px;
-            border: 1.5px solid #E89BB5;
-            font-family: 'DM Sans', sans-serif;
+        .flash-msg {
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
             font-size: 13px;
-            background: #FEF8F0;
-            color: #2A1A1F;
-        }
-        .import-target-hint {
-            font-size: 11.5px;
-            color: #7A4A5C;
-            margin-top: 8px;
             line-height: 1.45;
         }
-        .import-default-row {
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12.5px;
-            color: #3A2030;
+        .flash-msg.error {
+            background: #FDEAEA;
+            border: 1px solid #E07070;
+            color: #8B2020;
         }
-        .import-default-row input { width: 16px; height: 16px; accent-color: #A8324F; }
+        .flash-msg.warning {
+            background: #FFF8E6;
+            border: 1px solid #E0C46A;
+            color: #6B5A1A;
+        }
+        .flash-msg.success {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+            color: #2E7D32;
+        }
     </style>
 </head>
 
@@ -332,45 +257,16 @@
             <p>Upload your broker CSV to populate the calendar</p>
         </div>
 
-        <!-- Django Messages Display -->
         {% if messages %}
             {% for message in messages %}
-                {% if message.tags == 'success' %}
-                <div class="success-message" id="successMessage">
-                    <div class="success-icon">✓</div>
-                    <div class="success-text">
-                        <strong>Success!</strong>
-                        <span>{{ message }}</span>
-                    </div>
-                    <button class="close-success" onclick="this.parentElement.remove()">×</button>
+                <div class="flash-msg{% if message.level_tag == 'error' %} error{% elif message.level_tag == 'success' %} success{% elif message.level_tag == 'warning' %} warning{% endif %}">
+                    {{ message }}
                 </div>
-                {% endif %}
             {% endfor %}
         {% endif %}
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="post" action="{% url 'upload_csv' %}" enctype="multipart/form-data" id="upload-form">
             {% csrf_token %}
-
-            <div class="import-target-box">
-                <label for="import_trading_account_id">Import into broker account</label>
-                {% if import_accounts %}
-                <select name="import_trading_account_id" id="import_trading_account_id" required>
-                    {% for acc in import_accounts %}
-                    <option value="{{ acc.id }}"{% if selected_import_account_id == acc.id %} selected{% endif %}>
-                        {{ acc.name }} — {{ acc.broker }} ({{ acc.account_number }})
-                    </option>
-                    {% endfor %}
-                </select>
-                <p class="import-target-hint">Used as the default target for <strong>performance</strong> CSVs. Rithmic and Tradovate files still follow the account column; your choice updates last-used and optional default below.</p>
-                {% else %}
-                <p class="import-target-hint">No broker accounts yet. Your first <strong>Rithmic</strong> or <strong>Tradovate</strong> import will create them from the file. For <strong>performance</strong> CSVs, import one of those first, then return here.</p>
-                <input type="hidden" name="import_trading_account_id" value="">
-                {% endif %}
-                <label class="import-default-row">
-                    <input type="checkbox" name="set_default_import" value="1">
-                    Save selection as my default for future imports
-                </label>
-            </div>
 
             <div class="drop-zone" id="dropZone">
                 <input type="file" name="file" id="fileInput" accept=".csv">
@@ -405,18 +301,6 @@
                 label.textContent = '✓  ' + e.dataTransfer.files[0].name;
             }
         });
-
-        // Auto-hide success message after 5 seconds
-        const successMsg = document.getElementById('successMessage');
-        if (successMsg) {
-            setTimeout(() => {
-                successMsg.style.opacity = '0';
-                successMsg.style.transform = 'translateY(-10px)';
-                setTimeout(() => {
-                    if (successMsg.parentElement) successMsg.remove();
-                }, 300);
-            }, 5000);
-        }
     </script>
 </body>
 </html>

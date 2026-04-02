@@ -50,33 +50,6 @@ def _get_admin_user(request):
     return get_principal_owner(request)
 
 
-def _upload_import_page_context(request, owner):
-    profile = request.user.profile
-    qs = TradingAccount.objects.filter(owner=owner, is_archived=False).order_by(
-        "name", "account_number"
-    )
-    pref_id = None
-    for candidate in (
-        profile.last_import_trading_account_id,
-        profile.default_import_trading_account_id,
-    ):
-        if candidate and qs.filter(pk=candidate).exists():
-            pref_id = candidate
-            break
-    if pref_id is None and qs.exists():
-        pref_id = qs.first().pk
-    return {"import_accounts": qs, "selected_import_account_id": pref_id}
-
-
-def _persist_import_account_prefs(request, profile, account, set_default: bool):
-    profile.last_import_trading_account = account
-    update_fields = ["last_import_trading_account"]
-    if set_default:
-        profile.default_import_trading_account = account
-        update_fields.append("default_import_trading_account")
-    profile.save(update_fields=update_fields)
-
-
 def _admin_org_user_ids(request) -> set[int] | None:
     """Principal org member user ids, or None if caller is not a non-super admin."""
     try:
@@ -104,43 +77,6 @@ def _admin_may_edit_managed_user(request, target_profile) -> bool:
     if target_profile.role == "admin":
         return False
     return target_profile.role in ("assistant", "client")
-
-
-def _resolve_upload_trading_account(request, owner, account_number, defaults):
-    """
-    Resolve or create a TradingAccount for CSV import.
-    Returns (account, None) or (None, error_message) if account_number matches an archived account.
-    """
-    existing = TradingAccount.objects.filter(
-        owner=owner, account_number=account_number
-    ).first()
-    if existing:
-        if existing.is_archived:
-            return None, (
-                f'Account "{account_number}" is archived. Unarchive it on the '
-                "Accounts page before importing to it again."
-            )
-        if existing.uploaded_by_id != request.user.id:
-            existing.uploaded_by = request.user
-            existing.save(update_fields=["uploaded_by"])
-        return existing, None
-    try:
-        account = TradingAccount.objects.create(
-            owner=owner,
-            account_number=account_number,
-            name=defaults["name"],
-            broker=defaults["broker"],
-            user=defaults.get("user", owner),
-            uploaded_by=request.user,
-            status=TradingAccount.STATUS_ACTIVE,
-            is_archived=False,
-        )
-    except IntegrityError:
-        return None, (
-            f'Could not create account "{defaults["name"]}" — name may already be in use. '
-            "Rename the existing account or adjust the CSV."
-        )
-    return account, None
 
 
 TRADING_ACCOUNTS_SORT_FIELDS = {
@@ -608,6 +544,59 @@ def parse_performance(df, account):
 # UPLOAD CSV
 # ─────────────────────────────────────────
 
+def _csv_text_from_upload(csv_file) -> str:
+    raw = csv_file.read()
+    try:
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        try:
+            return raw.decode("latin-1")
+        except UnicodeDecodeError:
+            return raw.decode("utf-8", errors="replace")
+
+
+def _get_or_create_import_account(request, owner, account_number: str, name: str, broker: str):
+    """
+    Find or create a trading account for CSV import.
+    Returns (account, None) or (None, error_message).
+    """
+    an = str(account_number).strip()
+    if not an:
+        return None, "Skipped rows with an empty Account id."
+    account = (
+        TradingAccount.objects.filter(owner=owner, account_number=an)
+        .order_by("id")
+        .first()
+    )
+    if account is not None:
+        if account.is_archived:
+            return None, (
+                f'Account "{an}" is archived. Unarchive it on the Accounts page '
+                "before importing to it again."
+            )
+        if account.uploaded_by_id != request.user.id:
+            account.uploaded_by = request.user
+            account.save(update_fields=["uploaded_by"])
+        return account, None
+    try:
+        account = TradingAccount.objects.create(
+            owner=owner,
+            account_number=an,
+            name=name,
+            broker=broker,
+            user=owner,
+            uploaded_by=request.user,
+            status=TradingAccount.STATUS_ACTIVE,
+            is_archived=False,
+        )
+    except IntegrityError:
+        return None, (
+            f'Could not create account for "{an}" — that name may already be in use '
+            "for another active account. Rename the existing account or fix the CSV."
+        )
+    return account, None
+
+
 @login_required
 def upload_csv(request):
     role = getattr(getattr(request.user, "profile", None), "role", "client")
@@ -618,117 +607,100 @@ def upload_csv(request):
         return redirect("dashboard")
 
     owner = _get_admin_user(request)
-    upload_ctx = _upload_import_page_context(request, owner)
 
     if request.method == "POST":
         csv_file = request.FILES.get("file")
         if not csv_file:
             messages.error(request, "No file selected.")
-            return render(request, "upload.html", upload_ctx)
+            return redirect("upload_csv")
 
-        set_default = bool(request.POST.get("set_default_import"))
-        raw_aid = (request.POST.get("import_trading_account_id") or "").strip()
-        selected_account = None
-        if raw_aid:
-            try:
-                sel_id = int(raw_aid)
-            except ValueError:
-                sel_id = None
-            else:
-                selected_account = TradingAccount.objects.filter(
-                    pk=sel_id, owner=owner, is_archived=False
-                ).first()
-        accounts_exist = upload_ctx["import_accounts"].exists()
-        if accounts_exist and not selected_account:
-            messages.error(request, "Choose a broker account for this import.")
-            return render(request, "upload.html", upload_ctx)
-
-        text = csv_file.read().decode("utf-8")
+        try:
+            text = _csv_text_from_upload(csv_file)
+        except Exception:
+            messages.error(request, "Could not read the uploaded file.")
+            return redirect("upload_csv")
 
         import_errors: list[str] = []
         any_import_ok = False
-        last_touched: TradingAccount | None = None
 
-        if "Completed Orders" in text:
-            df = load_rithmic_csv(text)
-            for account_number, group in df.groupby("Account"):
-                an = str(account_number).strip()
-                account, err = _resolve_upload_trading_account(
+        try:
+            if "Completed Orders" in text:
+                df = load_rithmic_csv(text)
+                for account_number, group in df.groupby("Account"):
+                    an = str(account_number).strip()
+                    account, err = _get_or_create_import_account(
+                        request,
+                        owner,
+                        an,
+                        f"Account {an}",
+                        "Rithmic",
+                    )
+                    if err:
+                        import_errors.append(err)
+                        continue
+                    parse_rithmic(group.copy(), account)
+                    any_import_ok = True
+
+            elif "B/S" in text[:500]:
+                df = pd.read_csv(StringIO(text))
+                for account_number, group in df.groupby("Account"):
+                    an = str(account_number).strip()
+                    account, err = _get_or_create_import_account(
+                        request,
+                        owner,
+                        an,
+                        f"Account {an}",
+                        "Tradovate",
+                    )
+                    if err:
+                        import_errors.append(err)
+                        continue
+                    parse_tradovate(group.copy(), account)
+                    any_import_ok = True
+
+            elif "buyPrice" in text and "sellPrice" in text:
+                df = pd.read_csv(StringIO(text))
+                account, err = _get_or_create_import_account(
                     request,
                     owner,
-                    an,
-                    {
-                        "name": f"Account {an}",
-                        "broker": "Rithmic",
-                        "user": owner,
-                    },
+                    "performance",
+                    "Performance Import",
+                    "Tradovate",
                 )
                 if err:
-                    import_errors.append(err)
-                    continue
-                parse_rithmic(group.copy(), account)
+                    messages.error(request, err)
+                    return redirect("upload_csv")
+                parse_performance(df.copy(), account)
                 any_import_ok = True
-                last_touched = account
 
-        elif "B/S" in text[:500]:
-            df = pd.read_csv(StringIO(text))
-            for account_number, group in df.groupby("Account"):
-                an = str(account_number).strip()
-                account, err = _resolve_upload_trading_account(
-                    request,
-                    owner,
-                    an,
-                    {
-                        "name": f"Account {an}",
-                        "broker": "Tradovate",
-                        "user": owner,
-                    },
-                )
-                if err:
-                    import_errors.append(err)
-                    continue
-                parse_tradovate(group.copy(), account)
-                any_import_ok = True
-                last_touched = account
-
-        elif "buyPrice" in text and "sellPrice" in text:
-            if not selected_account:
-                messages.error(
-                    request,
-                    "Performance CSV needs a target account. Import a Rithmic or Tradovate file first "
-                    "or pick an existing broker account below.",
-                )
-                return render(request, "upload.html", upload_ctx)
-            df = pd.read_csv(StringIO(text))
-            account = selected_account
-            if account.uploaded_by_id != request.user.id:
-                account.uploaded_by = request.user
-                account.save(update_fields=["uploaded_by"])
-            parse_performance(df.copy(), account)
-            any_import_ok = True
-            last_touched = account
-
-        else:
-            messages.error(request, "Unrecognized CSV format.")
-            return render(request, "upload.html", upload_ctx)
-
-        if any_import_ok and last_touched:
-            _persist_import_account_prefs(
-                request, request.user.profile, last_touched, set_default
+            else:
+                messages.error(request, "Unrecognized CSV format.")
+                return redirect("upload_csv")
+        except Exception:
+            messages.error(
+                request,
+                "Import failed while processing this file. Check the format or re-export from your broker.",
             )
+            return redirect("upload_csv")
 
         if any_import_ok:
             messages.success(request, "CSV imported successfully.")
             for msg in dict.fromkeys(import_errors):
                 messages.warning(request, msg)
-        elif import_errors:
+            return redirect("dashboard")
+
+        if import_errors:
             messages.error(request, "No data was imported.")
             for msg in dict.fromkeys(import_errors):
                 messages.warning(request, msg)
+        else:
+            messages.warning(
+                request,
+                "No trades were imported from this file (check account numbers and file contents).",
+            )
+        return redirect("upload_csv")
 
-        return redirect("dashboard")
-
-    return render(request, "upload.html", upload_ctx)
+    return render(request, "upload.html")
 
 
 # ─────────────────────────────────────────
