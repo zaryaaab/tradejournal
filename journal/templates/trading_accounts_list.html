@@ -75,7 +75,7 @@
 <main class="main">
     <div class="header">
         <h1>Trading <em>Accounts</em></h1>
-        <p class="header-sub">This is the <strong>master list</strong> of broker accounts for imports and calendar/analytics scope. Search, filter, sort, and paginate as your list grows. Archived accounts are hidden from imports. Removing an account hides it for seven days (recoverable by support), then it is purged with all trades and screenshots.</p>
+        <p class="header-sub">This is the <strong>master list</strong> of broker accounts for imports and calendar/analytics scope. Search, filter, sort, and paginate as your list grows. Archived accounts are hidden from the default list and from imports. <strong>Retire</strong> marks an account Blown and archives it—trades and history are kept permanently for reporting.</p>
     </div>
 
     <form class="filters" method="get" action="">
@@ -174,7 +174,7 @@
                     <td>
                         <div class="actions">
                             <a href="{% url 'edit_trading_account' acc.id %}" class="act-edit">Edit</a>
-                            <a href="{% url 'delete_account' acc.id %}" class="act-del">Delete</a>
+                            <a href="{% url 'retire_trading_account' acc.id %}" class="act-del">Retire</a>
                             <form method="post" action="{% url 'archive_trading_account' acc.id %}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="act-arch">{% if acc.is_archived %}Unarchive{% else %}Archive{% endif %}</button>

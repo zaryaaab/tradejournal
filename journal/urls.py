@@ -34,7 +34,11 @@ urlpatterns = [
         views.archive_trading_account,
         name="archive_trading_account",
     ),
-    path("account/<int:account_id>/delete/", views.delete_account, name="delete_account"),
+    path(
+        "accounts/<int:account_id>/retire/",
+        views.retire_trading_account,
+        name="retire_trading_account",
+    ),
     path('change-password/', views.change_password, name='change_password'),
 
     # ── User management (admin only) ─────────────────────────────────

@@ -1137,22 +1137,22 @@ def archive_trading_account(request, account_id):
 
 
 # ─────────────────────────────────────────
-# DELETE TRADING ACCOUNT
+# RETIRE TRADING ACCOUNT (blown + archive, no data removal)
 # ─────────────────────────────────────────
 
 @login_required
-def delete_account(request, account_id):
+def retire_trading_account(request, account_id):
     if not can_manage_trading_accounts(request):
-        messages.error(request, "Only administrators can delete accounts.")
+        messages.error(request, "Only administrators can retire accounts.")
         return redirect("dashboard")
 
     owner = _get_admin_user(request)
     account = get_object_or_404(TradingAccount, id=account_id, owner=owner)
 
     if request.method == "POST":
-        if (request.POST.get("confirm_delete") or "").strip() != "DELETE":
-            messages.error(request, 'Type DELETE exactly to confirm removal.')
-            return redirect("delete_account", account_id=account_id)
+        if (request.POST.get("confirm_retire") or "").strip() != "RETIRE":
+            messages.error(request, "Type RETIRE exactly to confirm.")
+            return redirect("retire_trading_account", account_id=account_id)
         sel = request.session.get(SELECTED_TRADING_ACCOUNT_SESSION_KEY)
         if sel == account.id:
             request.session.pop(SELECTED_TRADING_ACCOUNT_SESSION_KEY, None)
@@ -1162,23 +1162,29 @@ def delete_account(request, account_id):
         UserProfile.objects.filter(last_import_trading_account=account).update(
             last_import_trading_account=None
         )
-        account.deleted_at = timezone.now()
-        account.save(update_fields=["deleted_at"])
+        account.status = TradingAccount.STATUS_BLOWN
+        account.is_archived = True
+        account.archived_at = timezone.now()
+        account.save(update_fields=["status", "is_archived", "archived_at"])
         messages.success(
             request,
-            "Account removed. It can be purged from the database after 7 days, or contact support to restore before then.",
+            "Account retired (marked Blown and archived). All trades and history stay in the journal for reporting.",
         )
         return redirect("trading_accounts_list")
 
     trades = Trade.objects.filter(account=account).order_by("-date", "-entry_time")
     trade_count = trades.count()
     total_pnl = round(trades.aggregate(t=Sum("pnl"))["t"] or 0, 2)
-    return render(request, "delete_account_confirm.html", {
-        "account":     account,
-        "trades":      trades,
-        "trade_count": trade_count,
-        "total_pnl":   total_pnl,
-    })
+    return render(
+        request,
+        "retire_trading_account_confirm.html",
+        {
+            "account": account,
+            "trades": trades,
+            "trade_count": trade_count,
+            "total_pnl": total_pnl,
+        },
+    )
 
 
 @login_required

@@ -14,10 +14,7 @@ def trades_for_owner(owner: User, trading_account_id: Optional[int] = None) -> Q
     Trades for accounts owned by the principal user.
     If trading_account_id is set, restrict to that TradingAccount (must belong to owner).
     """
-    qs = Trade.objects.filter(
-        account__owner=owner,
-        account__deleted_at__isnull=True,
-    )
+    qs = Trade.objects.filter(account__owner=owner)
     if trading_account_id is not None:
         qs = qs.filter(account_id=trading_account_id)
     return qs
