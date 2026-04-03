@@ -1317,7 +1317,26 @@ def edit_user(request, user_id):
     if request.method == "POST":
         action = request.POST.get("action")
 
-        if action == "change_role":
+        if action == "update_details":
+            first_name = request.POST.get("first_name", "").strip()
+            last_name = request.POST.get("last_name", "").strip()
+            username = request.POST.get("username", "").strip()
+            email = request.POST.get("email", "").strip()
+            if not first_name:
+                messages.error(request, "First name is required.")
+            elif not username:
+                messages.error(request, "Username is required.")
+            elif User.objects.filter(username=username).exclude(pk=target_user.pk).exists():
+                messages.error(request, f"Username '{username}' is already taken.")
+            else:
+                target_user.first_name = first_name[:150]
+                target_user.last_name = last_name[:150]
+                target_user.username = username[:150]
+                target_user.email = email[:254]
+                target_user.save()
+                messages.success(request, "Name, username, and email updated.")
+
+        elif action == "change_role":
             new_role = request.POST.get("role", "client")
             allowed_roles = (
                 ["admin", "assistant", "client"]

@@ -196,6 +196,40 @@
         }
         .back-link:hover { color: var(--rose); }
 
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #EDD8E0;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            background: white;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--rose-light);
+            box-shadow: 0 0 0 3px rgba(232,155,181,0.18);
+        }
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 520px) {
+            .row-2 { grid-template-columns: 1fr; }
+        }
+
         /* subtle fade-in for conditional block */
         @keyframes fadeSlide {
             from { opacity: 0; transform: translateY(6px); }
@@ -230,6 +264,38 @@
         <div class="alert">{{ message }}</div>
         {% endfor %}
     {% endif %}
+
+    <!-- Profile (name, username, email — same fields as create user) -->
+    <div class="section-box">
+        <h3>Profile</h3>
+        <form method="POST" action="{% url 'edit_user' target_user.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_details">
+            <div class="row-2">
+                <div class="form-group">
+                    <label for="first_name">First name *</label>
+                    <input type="text" id="first_name" name="first_name" required maxlength="150"
+                           value="{{ target_user.first_name }}">
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last name</label>
+                    <input type="text" id="last_name" name="last_name" maxlength="150"
+                           value="{{ target_user.last_name }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" id="username" name="username" required maxlength="150"
+                       value="{{ target_user.username }}" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" maxlength="254"
+                       value="{{ target_user.email }}" autocomplete="email">
+            </div>
+            <button type="submit" class="save-btn">Save profile</button>
+        </form>
+    </div>
 
     <!-- Change Role -->
     <div class="section-box">
