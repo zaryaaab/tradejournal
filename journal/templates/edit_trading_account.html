@@ -7,8 +7,10 @@
     <title>Edit Account — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500;600;700&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_pages.css' %}">
     <style>
         :root {
             --pink: #D96B8A; --pink-light: #EFA8BC; --pink-soft: #F5C8D6;
@@ -39,7 +41,7 @@
         }
     </style>
 </head>
-<body class="has-app-shell">
+<body class="page-neon-shell">
 {% include "partials/app_sidebar.html" %}
 <main class="main">
     <h1>Edit <em>Account</em></h1>

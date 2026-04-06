@@ -1,0 +1,21 @@
+/* Day journal view: theme variables + background (with or without sidebar shell). */
+body.page-neon-day,
+body.page-neon-shell.day-shell {
+    --blush: rgba(255, 46, 166, 0.32);
+    --blush-mid: rgba(255, 107, 214, 0.42);
+    --rose: #ff6bd6;
+    --rose-deep: #ff2ea6;
+    --gold: #ffe066;
+    --gold-light: rgba(255, 224, 102, 0.12);
+    --cream: #0f0f14;
+    --text: #f0f0f5;
+    --text-soft: #a8a8b8;
+    --white: #1c1824;
+}
+
+body.page-neon-day {
+    margin: 0;
+    min-height: 100vh;
+    background: #0f0f14;
+    color: var(--text);
+}

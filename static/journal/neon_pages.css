@@ -1,0 +1,761 @@
+/* Shared neon styling for main content (pages with body.page-neon-shell). */
+.page-neon-shell {
+    --text: #f0f0f5;
+    --text-soft: #b0b0bc;
+    --white: rgba(30, 24, 36, 0.92);
+    --cream: rgba(15, 15, 20, 0.95);
+    --pink-deep: #ff2ea6;
+    --pink-mid: #ff6bd6;
+    --pink-light: rgba(255, 46, 166, 0.45);
+    --pink-soft: rgba(255, 107, 214, 0.2);
+    --gold: #ffe066;
+    --green: #7dffb3;
+    --green-bg: rgba(125, 255, 179, 0.12);
+    --red: #ff8a9a;
+    --red-bg: rgba(255, 138, 154, 0.12);
+}
+
+.page-neon-shell .main a[style*="color:var(--pink-deep)"] {
+    color: var(--neon-accent-soft) !important;
+}
+
+/* Headers */
+.page-neon-shell .page-header h1,
+.page-neon-shell .header h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.page-neon-shell .page-header h1 em,
+.page-neon-shell .header h1 em {
+    font-style: italic;
+    color: var(--neon-accent-soft);
+    text-shadow: 0 0 24px rgba(255, 46, 166, 0.45);
+}
+
+.page-neon-shell .page-header-sub,
+.page-neon-shell .header-sub {
+    color: var(--neon-text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.page-neon-shell .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+/* Section dividers */
+.page-neon-shell .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    margin-top: 8px;
+}
+
+.page-neon-shell .section-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--neon-accent-soft);
+    white-space: nowrap;
+}
+
+.page-neon-shell .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--neon-accent), transparent);
+    opacity: 0.65;
+}
+
+/* Messages */
+.page-neon-shell .msg {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.page-neon-shell .msg-success {
+    background: rgba(125, 255, 179, 0.12);
+    color: #9dffc4;
+    border: 1px solid rgba(125, 255, 179, 0.35);
+}
+
+.page-neon-shell .msg-error {
+    background: rgba(255, 138, 154, 0.12);
+    color: #ffb0bc;
+    border: 1px solid rgba(255, 138, 154, 0.35);
+}
+
+/* Primary buttons */
+.page-neon-shell .create-btn {
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    box-shadow: var(--neon-card-shadow);
+    border: none;
+}
+
+.page-neon-shell .create-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+}
+
+/* Table cards */
+.page-neon-shell .table-card {
+    background: rgba(58, 13, 63, 0.4);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: var(--neon-glow);
+}
+
+.page-neon-shell .table-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255, 46, 166, 0.25);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.page-neon-shell .table-card-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.page-neon-shell .table-card-title em {
+    font-style: italic;
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .count-badge,
+.page-neon-shell .table-card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(255, 46, 166, 0.22);
+    color: #fff;
+    border: 1px solid rgba(255, 46, 166, 0.45);
+}
+
+.page-neon-shell .main table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.page-neon-shell .main thead th {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 12px 18px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--neon-text-secondary);
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 46, 166, 0.2);
+}
+
+.page-neon-shell .main tbody td {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 46, 166, 0.12);
+    color: var(--neon-text);
+    vertical-align: middle;
+}
+
+.page-neon-shell .main tbody tr:hover {
+    background: rgba(255, 46, 166, 0.06);
+}
+
+.page-neon-shell .main tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.page-neon-shell .empty-state {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--neon-text-secondary);
+    font-style: italic;
+}
+
+/* Role badges */
+.page-neon-shell .role-super_admin {
+    background: #2a2435;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.page-neon-shell .role-admin {
+    background: rgba(255, 46, 166, 0.25);
+    color: #fff;
+    border: 1px solid rgba(255, 46, 166, 0.45);
+}
+
+.page-neon-shell .role-assistant {
+    background: rgba(255, 224, 102, 0.15);
+    color: #ffe066;
+    border: 1px solid rgba(255, 224, 102, 0.35);
+}
+
+.page-neon-shell .role-client {
+    background: rgba(125, 255, 179, 0.12);
+    color: #9dffc4;
+    border: 1px solid rgba(125, 255, 179, 0.3);
+}
+
+/* Action buttons */
+.page-neon-shell .btn-edit,
+.page-neon-shell .act-edit {
+    background: rgba(58, 13, 63, 0.6);
+    color: #ffffff;
+    border: 1px solid rgba(255, 46, 166, 0.55);
+}
+
+.page-neon-shell .btn-edit:hover,
+.page-neon-shell .act-edit:hover {
+    background: rgba(255, 46, 166, 0.25);
+    color: #fff;
+    border-color: var(--neon-accent-soft);
+}
+
+/* CTA inside table-card panels (e.g. broker accounts blurb) */
+.page-neon-shell .table-card a.btn-edit {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgba(255, 46, 166, 0.45), rgba(176, 38, 255, 0.35));
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    font-weight: 600;
+}
+
+.page-neon-shell .table-card a.btn-edit:hover {
+    color: #fff !important;
+    background: linear-gradient(135deg, rgba(255, 46, 166, 0.65), rgba(176, 38, 255, 0.5));
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.page-neon-shell .btn-delete,
+.page-neon-shell .act-del {
+    background: rgba(255, 138, 154, 0.15);
+    color: #ffb0bc;
+    border: 1px solid rgba(255, 138, 154, 0.35);
+}
+
+.page-neon-shell .btn-delete:hover {
+    background: rgba(255, 138, 154, 0.25);
+}
+
+.page-neon-shell .act-arch {
+    background: transparent;
+    color: var(--neon-text-secondary);
+    border: 1px solid rgba(255, 46, 166, 0.35);
+}
+
+/* Filters (trading accounts) */
+.page-neon-shell .filters {
+    background: rgba(58, 13, 63, 0.35);
+    border: 1px solid rgba(255, 46, 166, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(255, 46, 166, 0.08);
+}
+
+.page-neon-shell .filters label {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .filters input[type="text"],
+.page-neon-shell .filters select {
+    background: var(--neon-inner);
+    border: 1px solid rgba(255, 46, 166, 0.4);
+    color: #fff;
+    font-family: var(--font-sans);
+}
+
+.page-neon-shell .filters button,
+.page-neon-shell .filters .btn-apply {
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    border: none;
+}
+
+.page-neon-shell .filters .btn-secondary {
+    background: transparent;
+    color: var(--neon-accent-soft);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+}
+
+.page-neon-shell .filters .btn-secondary:hover {
+    background: rgba(255, 46, 166, 0.12);
+}
+
+/* Pagination */
+.page-neon-shell .pagination a,
+.page-neon-shell .pagination span {
+    border: 1px solid rgba(255, 46, 166, 0.35);
+    color: var(--neon-text-secondary);
+    background: rgba(30, 24, 36, 0.5);
+}
+
+.page-neon-shell .pagination a:hover {
+    background: rgba(255, 46, 166, 0.15);
+    color: #fff;
+}
+
+.page-neon-shell .pagination .current {
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    border-color: transparent;
+}
+
+.page-neon-shell .sort-link {
+    color: var(--neon-accent-soft);
+}
+
+/* Status badges */
+.page-neon-shell .badge-active {
+    background: rgba(125, 255, 179, 0.15);
+    color: #9dffc4;
+}
+
+.page-neon-shell .badge-eval {
+    background: rgba(255, 224, 102, 0.12);
+    color: #ffe066;
+}
+
+.page-neon-shell .badge-funded {
+    background: rgba(120, 200, 255, 0.12);
+    color: #9fd4ff;
+}
+
+.page-neon-shell .badge-blown {
+    background: rgba(255, 138, 154, 0.15);
+    color: #ffb0bc;
+}
+
+.page-neon-shell .badge-arch {
+    background: rgba(255, 46, 166, 0.15);
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .empty {
+    color: var(--neon-text-secondary);
+}
+
+/* Password card + form cards */
+.page-neon-shell .password-card,
+.page-neon-shell .form-card {
+    background: rgba(58, 13, 63, 0.4);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    border-radius: 16px;
+    box-shadow: var(--neon-glow);
+}
+
+.page-neon-shell .password-card h2,
+.page-neon-shell .form-card-header h2 {
+    color: #fff;
+}
+
+.page-neon-shell .password-card h2 em,
+.page-neon-shell .form-card-header h2 em {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .password-card-sub {
+    color: var(--neon-text-secondary);
+}
+
+.page-neon-shell .password-card label,
+.page-neon-shell .form-card label,
+.page-neon-shell .form-group label {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .password-card input[type="password"],
+.page-neon-shell .password-card input[type="text"],
+.page-neon-shell .form-card input,
+.page-neon-shell .form-group input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    background: var(--neon-inner);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    color: #fff;
+    font-family: var(--font-sans);
+}
+
+.page-neon-shell .password-card input:focus,
+.page-neon-shell .form-card input:focus {
+    outline: none;
+    border-color: var(--neon-accent);
+    box-shadow: 0 0 0 2px rgba(255, 46, 166, 0.2);
+}
+
+.page-neon-shell .password-card .help-text,
+.page-neon-shell .help-text {
+    color: var(--neon-text-secondary);
+}
+
+.page-neon-shell .password-card .btn-submit,
+.page-neon-shell .btn-submit {
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    border: none;
+    box-shadow: var(--neon-card-shadow);
+}
+
+.page-neon-shell .password-card .btn-submit:hover,
+.page-neon-shell .btn-submit:hover {
+    filter: brightness(1.08);
+}
+
+.page-neon-shell .btn-cancel {
+    background: transparent;
+    color: var(--neon-text-secondary);
+    border: 1px solid rgba(255, 46, 166, 0.4);
+}
+
+.page-neon-shell .btn-cancel:hover {
+    background: rgba(255, 46, 166, 0.12);
+    color: #fff;
+}
+
+.page-neon-shell .form-card-header {
+    padding: 20px 24px 12px;
+    border-bottom: 1px solid rgba(255, 46, 166, 0.2);
+}
+
+.page-neon-shell .form-card-body {
+    padding: 20px 24px 28px;
+}
+
+.page-neon-shell .form-actions {
+    border-top-color: rgba(255, 46, 166, 0.2);
+}
+
+/* Edit account / small form card */
+.page-neon-shell .main > .card,
+.page-neon-shell main .card:not(.cal-day) {
+    background: rgba(58, 13, 63, 0.4);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    border-radius: 16px;
+    color: var(--neon-text);
+    box-shadow: var(--neon-glow);
+}
+
+.page-neon-shell .main > h1 + p,
+.page-neon-shell main > p[style*="color:var(--text-soft)"] {
+    color: var(--neon-text-secondary) !important;
+}
+
+.page-neon-shell .main label:not(.check-item):not(.mini-check):not(.sj-quality-card):not(.sj-yn) {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.page-neon-shell .main select,
+.page-neon-shell .main textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    background: var(--neon-inner);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    color: #fff;
+}
+
+.page-neon-shell .main button[type="submit"]:not(.btn-create-user-submit) {
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    border: none;
+}
+
+.page-neon-shell .btn-cancel {
+    text-decoration: none;
+}
+
+/* Centered auth-style cards (create user, edit user, delete) */
+.page-neon-shell .neon-centered-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-neon-shell .neon-centered-wrap .card,
+.page-neon-shell .neon-centered-wrap.container .card {
+    background: rgba(58, 13, 63, 0.5);
+    border: 1px solid rgba(255, 46, 166, 0.5);
+    border-radius: 20px;
+    box-shadow: var(--neon-glow);
+    color: #fff;
+}
+
+.page-neon-shell .neon-centered-wrap .brand h1,
+.page-neon-shell .neon-centered-wrap h1 {
+    color: #fff;
+}
+
+.page-neon-shell .neon-centered-wrap .brand h1 em {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .neon-centered-wrap label {
+    color: var(--neon-text-secondary);
+}
+
+.page-neon-shell .neon-centered-wrap input[type="text"],
+.page-neon-shell .neon-centered-wrap input[type="email"],
+.page-neon-shell .neon-centered-wrap input[type="password"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: var(--font-sans);
+    line-height: 1.4;
+    background: var(--neon-inner);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    color: #fff;
+}
+
+.page-neon-shell .neon-centered-wrap input[type="text"]:focus,
+.page-neon-shell .neon-centered-wrap input[type="email"]:focus,
+.page-neon-shell .neon-centered-wrap input[type="password"]:focus {
+    outline: none;
+    border-color: var(--neon-accent);
+    box-shadow: 0 0 0 2px rgba(255, 46, 166, 0.25);
+}
+
+.page-neon-shell .neon-centered-wrap .back-link {
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .neon-centered-wrap .alert-success {
+    background: rgba(125, 255, 179, 0.12);
+    color: #9dffc4;
+    border: 1px solid rgba(125, 255, 179, 0.3);
+}
+
+/* Retire confirm page */
+.page-neon-shell .page .header-card,
+.page-neon-shell .header-card {
+    background: rgba(58, 13, 63, 0.45);
+    border: 1px solid rgba(255, 46, 166, 0.45);
+    color: #fff;
+    box-shadow: var(--neon-glow);
+}
+
+.page-neon-shell .page {
+    color: var(--neon-text);
+}
+
+.page-neon-shell .header-text p {
+    color: var(--neon-text-secondary) !important;
+}
+
+.page-neon-shell .account-meta {
+    background: rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid rgba(255, 46, 166, 0.45) !important;
+}
+
+.page-neon-shell .meta-label {
+    color: var(--neon-accent-soft) !important;
+}
+
+.page-neon-shell .meta-value {
+    color: #ffffff !important;
+}
+
+.page-neon-shell .meta-sep {
+    background: rgba(255, 46, 166, 0.35) !important;
+}
+
+.page-neon-shell .info-list {
+    background: rgba(0, 0, 0, 0.22) !important;
+    border: 1px solid rgba(255, 46, 166, 0.4) !important;
+}
+
+.page-neon-shell .info-list span {
+    color: var(--neon-text-secondary) !important;
+}
+
+.page-neon-shell .info-list span::before {
+    background: var(--neon-accent) !important;
+    box-shadow: 0 0 8px rgba(255, 46, 166, 0.6);
+}
+
+/* Analytics page shared (tables, bars, empty strips) */
+.page-neon-shell .analytics-main-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.page-neon-shell .inline-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-neon-shell .inline-bar {
+    flex: 1;
+    max-width: 120px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.page-neon-shell .inline-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6bd6, #ff2ea6);
+    border-radius: 99px;
+}
+
+.page-neon-shell .inline-bar-fill.low {
+    background: linear-gradient(90deg, #888, #555);
+}
+
+.page-neon-shell .td-pos {
+    color: #7dffb3 !important;
+    font-weight: 700;
+}
+
+.page-neon-shell .td-neg {
+    color: #ff8a9a !important;
+    font-weight: 700;
+}
+
+.page-neon-shell .grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.page-neon-shell .grade-badge.gb-Aplus {
+    background: rgba(125, 255, 179, 0.2);
+    color: #7dffb3;
+}
+
+.page-neon-shell .grade-badge.gb-A {
+    background: rgba(125, 255, 179, 0.12);
+    color: #9dffc4;
+}
+
+.page-neon-shell .grade-badge.gb-B {
+    background: rgba(255, 224, 102, 0.15);
+    color: #ffe066;
+}
+
+.page-neon-shell .grade-badge.gb-C {
+    background: rgba(255, 46, 166, 0.2);
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .grade-badge.gb-F {
+    background: rgba(255, 138, 154, 0.2);
+    color: #ff8a9a;
+}
+
+.page-neon-shell .neon-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    border: 1px solid var(--neon-accent);
+    border-radius: 16px;
+    color: var(--neon-accent-soft);
+    font-size: 15px;
+    line-height: 1.55;
+    background: rgba(58, 13, 63, 0.35);
+    box-shadow: 0 0 20px rgba(255, 46, 166, 0.12);
+}
+
+.page-neon-shell .empty-state .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(255, 46, 166, 0.6));
+}
+
+.page-neon-shell .empty-state .empty-title {
+    font-family: var(--font-sans);
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--neon-accent);
+    text-shadow: 0 0 20px rgba(255, 46, 166, 0.5);
+    margin-bottom: 10px;
+}
+
+.page-neon-shell .empty-state .empty-title em {
+    font-style: normal;
+    color: var(--neon-accent-soft);
+}
+
+.page-neon-shell .empty-state .empty-sub {
+    font-size: 14px;
+    color: var(--neon-text-secondary);
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto 24px;
+}
+
+.page-neon-shell .import-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ff2ea6, #b026ff);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    box-shadow: var(--neon-card-shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.page-neon-shell .import-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(255, 46, 166, 0.45);
+}
+
+.page-neon-shell .empty-state {
+    text-align: center;
+    padding: 72px 32px;
+    border: 1px solid var(--neon-accent);
+    border-radius: 16px;
+    background: rgba(58, 13, 63, 0.35);
+    box-shadow: var(--neon-glow);
+}

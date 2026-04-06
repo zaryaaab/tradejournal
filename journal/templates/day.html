@@ -10,7 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
     {% if show_trading_accounts_sidebar %}
     <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
     {% endif %}
+    <link rel="stylesheet" href="{% static 'journal/neon_day.css' %}">
     <style>
         :root {
             --blush:     #F5C8D6;
@@ -499,7 +501,7 @@
     </style>
 </head>
 
-<body {% if show_trading_accounts_sidebar %}class="day-shell"{% endif %}>
+<body {% if show_trading_accounts_sidebar %}class="page-neon-shell day-shell"{% else %}class="page-neon-day"{% endif %}>
 {% if show_trading_accounts_sidebar %}
 {% include "partials/app_sidebar.html" %}
 <div class="day-main-column">

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,10 @@
     <title>Retire Account — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_pages.css' %}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -317,10 +321,82 @@
             color: #A8324F;
             border-color: #A8324F;
         }
+
+        /* Neon shell overrides */
+        body.page-neon-shell {
+            background: #0f0f14 !important;
+            padding: 0 !important;
+            display: flex !important;
+            margin: 0 !important;
+        }
+        body.page-neon-shell::before,
+        body.page-neon-shell::after {
+            display: none !important;
+            content: none !important;
+        }
+        .page-neon-shell .page { color: var(--neon-text); }
+        .page-neon-shell .header-card,
+        .page-neon-shell .trades-card,
+        .page-neon-shell .actions-card {
+            background: rgba(58, 13, 63, 0.45);
+            border: 1px solid rgba(255, 46, 166, 0.45);
+            color: #fff;
+            box-shadow: var(--neon-glow);
+        }
+        .page-neon-shell .header-text h1 { color: #fff; }
+        .page-neon-shell .header-text h1 em { color: var(--neon-accent-soft); }
+        /* account-meta, info-list, header-text p: see neon_pages.css */
+        .page-neon-shell .trades-header h2 { color: #fff; }
+        .page-neon-shell .count-badge {
+            background: rgba(255, 46, 166, 0.2);
+            border: 1px solid rgba(255, 46, 166, 0.45);
+            color: #fff;
+        }
+        .page-neon-shell .table-wrap {
+            border: 1px solid rgba(255, 46, 166, 0.25);
+        }
+        .page-neon-shell .table-wrap thead th {
+            background: rgba(0, 0, 0, 0.35);
+            color: var(--neon-text-secondary);
+            border-bottom-color: rgba(255, 46, 166, 0.25);
+        }
+        .page-neon-shell .table-wrap tbody td {
+            border-bottom-color: rgba(255, 46, 166, 0.12);
+            color: var(--neon-text);
+        }
+        .page-neon-shell .symbol-badge {
+            background: rgba(255, 46, 166, 0.15);
+            color: var(--neon-accent-soft);
+        }
+        .page-neon-shell .btn-cancel {
+            border-color: rgba(255, 46, 166, 0.45);
+            color: var(--neon-text-secondary);
+            background: transparent;
+        }
+        .page-neon-shell .btn-cancel:hover {
+            background: rgba(255, 46, 166, 0.12);
+            color: #fff;
+            border-color: var(--neon-accent);
+        }
+        .page-neon-shell .btn-retire {
+            background: linear-gradient(135deg, #8B6914, #5c450e);
+        }
+        .page-neon-shell .btn-retire:hover {
+            filter: brightness(1.1);
+        }
+        .page-neon-shell .actions-card label { color: var(--neon-text-secondary) !important; }
+        .page-neon-shell .actions-card input {
+            background: var(--neon-inner) !important;
+            border-color: rgba(255, 46, 166, 0.45) !important;
+            color: #fff !important;
+        }
+        .page-neon-shell .empty-state { color: var(--neon-text-secondary); }
     </style>
 </head>
 
-<body>
+<body class="page-neon-shell">
+{% include "partials/app_sidebar.html" %}
+<main class="main">
 <div class="page">
 
     <div class="header-card">
@@ -448,5 +524,6 @@
     </div>
 
 </div>
+</main>
 </body>
 </html>

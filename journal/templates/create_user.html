@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,122 +7,67 @@
     <title>Create User — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_pages.css' %}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #FEF8F0;
-            min-height: 100vh;
-            padding: 40px 24px;
+        .page-neon-shell .neon-centered-wrap {
+            padding-top: 8px;
         }
-        
-        .container {
+        .page-neon-shell .neon-centered-wrap .container {
             max-width: 700px;
             margin: 0 auto;
         }
-        
-        .card {
-            background: white;
-            border-radius: 32px;
+        .page-neon-shell .neon-centered-wrap .card {
             padding: 48px;
-            border: 1px solid #E89BB5;
-            box-shadow: 0 24px 80px rgba(168,50,79,0.12);
         }
-        
-        .brand {
-            text-align: center;
-            margin-bottom: 36px;
-        }
-        
-        .brand h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 36px;
-            font-weight: 300;
-            color: #2A1A1F;
-        }
-        
-        .brand h1 em {
-            font-style: italic;
-            color: #A8324F;
-        }
-        
-        .form-group {
+        .page-neon-shell .neon-centered-wrap .form-group {
             margin-bottom: 20px;
         }
-        
-        label {
+        .page-neon-shell .neon-centered-wrap .form-group label {
             display: block;
             font-size: 13px;
             font-weight: 500;
-            color: #2A1A1F;
             margin-bottom: 6px;
         }
-        
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #F0DFB8;
-            border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #E89BB5;
-            box-shadow: 0 0 0 3px rgba(232,155,181,0.1);
-        }
-        
-        .row {
+        .page-neon-shell .neon-centered-wrap .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-        
-        .role-section {
+        .page-neon-shell .neon-centered-wrap .role-section {
             margin-bottom: 28px;
             margin-top: 8px;
         }
-        
-        .role-section-label {
+        .page-neon-shell .neon-centered-wrap .role-section-label {
             display: block;
             font-size: 13px;
             font-weight: 500;
-            color: #2A1A1F;
             margin-bottom: 12px;
+            color: var(--neon-text-secondary);
         }
-        
-        /* Option 1: Using flexbox instead of grid with template filter */
-        .role-cards {
+        .page-neon-shell .neon-centered-wrap .role-cards {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
-        
-        .role-card {
+        .page-neon-shell .neon-centered-wrap .role-card {
             flex: 1;
             min-width: 150px;
-            border: 2px solid #F0DFB8;
+            border: 2px solid rgba(255, 46, 166, 0.35);
             border-radius: 16px;
             transition: all 0.2s;
             cursor: pointer;
         }
-        
-        .role-card:has(input:checked) {
-            border-color: #A8324F;
-            background: #FBE8EE;
+        .page-neon-shell .neon-centered-wrap .role-card:has(input:checked) {
+            border-color: #ff2ea6;
+            background: rgba(255, 46, 166, 0.15);
+            box-shadow: 0 0 20px rgba(255, 46, 166, 0.2);
         }
-        
-        .role-card input {
-            display: none;
-        }
-        
-        .role-card label {
+        .page-neon-shell .neon-centered-wrap .role-card input { display: none; }
+        .page-neon-shell .neon-centered-wrap .role-card label {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -131,96 +77,88 @@
             cursor: pointer;
             margin: 0;
         }
-        
-        .role-icon {
-            font-size: 32px;
-        }
-        
-        .role-name {
+        .page-neon-shell .neon-centered-wrap .role-name {
             font-weight: 600;
-            color: #2A1A1F;
+            color: #fff;
             font-size: 15px;
         }
-        
-        .role-desc {
+        .page-neon-shell .neon-centered-wrap .role-desc {
             font-size: 11px;
-            color: #8C6070;
+            color: var(--neon-text-secondary);
         }
-        
-        .submit-btn {
-            width: 100%;
-            background: #2A1A1F;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 12px;
-        }
-        
-        .submit-btn:hover {
-            background: #A8324F;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(168,50,79,0.3);
-        }
-        
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 24px;
-            font-size: 12.5px;
-            color: #7A4A5C;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        
-        .back-link:hover { 
-            color: #A8324F; 
-        }
-        
-        .alert {
-            background: #FEF2F0;
-            border-left: 3px solid #E8839A;
+        .page-neon-shell .neon-centered-wrap .alert {
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 20px;
             font-size: 13px;
-            color: #A8324F;
+            border: 1px solid rgba(255, 138, 154, 0.4);
+            background: rgba(255, 138, 154, 0.1);
+            color: #ffb0bc;
         }
-        
-        .alert-success {
-            background: #E8F5E9;
-            border-left-color: #4CAF50;
-            color: #2E7D32;
+        .page-neon-shell .neon-centered-wrap .alert-success {
+            border-color: rgba(125, 255, 179, 0.35);
+            background: rgba(125, 255, 179, 0.1);
+            color: #9dffc4;
         }
-        
         @media (max-width: 550px) {
-            .card {
-                padding: 32px 24px;
-            }
-            
-            .row {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            
-            .role-card {
-                min-width: 100%;
-            }
+            .page-neon-shell .neon-centered-wrap .card { padding: 32px 24px; }
+            .page-neon-shell .neon-centered-wrap .row { grid-template-columns: 1fr; }
+            .page-neon-shell .neon-centered-wrap .role-card { min-width: 100%; }
+        }
+
+        /* Create User form only — do not reuse this class elsewhere */
+        .page-neon-shell .main .btn-create-user-submit {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: none;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff2ea6 0%, #ff4fd8 45%, #b026ff 100%);
+            box-shadow:
+                0 4px 24px rgba(255, 46, 166, 0.45),
+                0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .page-neon-shell .main .btn-create-user-submit:hover {
+            filter: brightness(1.08);
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 32px rgba(255, 46, 166, 0.55),
+                0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+        }
+
+        .page-neon-shell .main .btn-create-user-submit:active {
+            transform: translateY(0);
+            filter: brightness(0.98);
+        }
+
+        .page-neon-shell .main .btn-create-user-submit:focus-visible {
+            outline: 2px solid #ffe066;
+            outline-offset: 3px;
         }
     </style>
 </head>
-<body>
+<body class="page-neon-shell">
+
+{% include "partials/app_sidebar.html" %}
+
+<main class="main">
+<div class="neon-centered-wrap">
     <div class="container">
         <div class="card">
             <div class="brand">
                 <h1>Create <em>New User</em></h1>
             </div>
-            
+
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert {% if 'success' in message.tags %}alert-success{% endif %}">
@@ -228,10 +166,10 @@
                     </div>
                 {% endfor %}
             {% endif %}
-            
+
             <form method="POST">
                 {% csrf_token %}
-                
+
                 <div class="row">
                     <div class="form-group">
                         <label>First Name *</label>
@@ -242,22 +180,22 @@
                         <input type="text" name="last_name">
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Username *</label>
                     <input type="text" name="username" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Email</label>
                     <input type="email" name="email">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Password * (min. 6 characters)</label>
                     <input type="password" name="password" required>
                 </div>
-                
+
                 <div class="role-section">
                     <span class="role-section-label">Select Role</span>
                     <div class="role-cards">
@@ -271,7 +209,7 @@
                             </label>
                         </div>
                         {% endif %}
-                        
+
                         {% if "client" in allowed_roles %}
                         <div class="role-card">
                             <input type="radio" id="role_client" name="role" value="client" {% if allowed_roles|length == 1 and "assistant" not in allowed_roles %}checked{% elif "assistant" in allowed_roles and allowed_roles|length == 2 %}checked{% endif %}>
@@ -282,7 +220,7 @@
                             </label>
                         </div>
                         {% endif %}
-                        
+
                         {% if "admin" in allowed_roles %}
                         <div class="role-card">
                             <input type="radio" id="role_admin" name="role" value="admin">
@@ -295,12 +233,15 @@
                         {% endif %}
                     </div>
                 </div>
-                
-                <button type="submit" class="submit-btn">Create User</button>
+
+                <button type="submit" class="btn-create-user-submit">Create User</button>
             </form>
-            
+
             <a href="{% url 'user_management' %}" class="back-link">← Back to User Management</a>
         </div>
     </div>
+</div>
+</main>
+
 </body>
 </html>

@@ -7,21 +7,15 @@
     <title>Import Trades — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body.upload-shell {
-            font-family: 'DM Sans', sans-serif;
-            background: #FEF8F0;
+        body.upload-shell.page-neon-shell {
             min-height: 100vh;
-            display: flex;
-            align-items: stretch;
-            justify-content: flex-start;
-            padding: 0;
             overflow-x: hidden;
-            overflow-y: auto;
         }
 
         .upload-main {
@@ -30,104 +24,97 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 32px 24px 48px;
+            background: #000000;
             position: relative;
         }
 
-        /* background petals */
-        .upload-main::before, .upload-main::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .upload-main::before {
-            width: 600px; height: 600px;
-            top: -200px; left: -200px;
-            background: radial-gradient(circle, #E8839A 0%, transparent 65%);
-            opacity: 0.5;
-        }
+        .upload-main::before,
         .upload-main::after {
-            width: 500px; height: 500px;
-            bottom: -150px; right: -100px;
-            background: radial-gradient(circle, #F0DFB8 0%, transparent 65%);
-            opacity: 0.6;
+            display: none;
         }
 
-        .card {
-            background: white;
-            border-radius: 32px;
-            padding: 52px 48px;
+        .import-card {
             width: 100%;
-            max-width: 460px;
-            border: 1px solid #E89BB5;
-            box-shadow: 0 24px 80px rgba(168,50,79,0.12);
+            max-width: 480px;
+            padding: 44px 40px 40px;
+            text-align: center;
+            border-radius: 28px;
+            background: linear-gradient(180deg, #a32a86 0%, #7a1d63 55%, #5c1650 100%);
+            border: 1px solid rgba(255, 46, 166, 0.65);
+            box-shadow:
+                0 0 24px 6px rgba(255, 46, 166, 0.45),
+                0 0 48px rgba(176, 38, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
             position: relative;
             z-index: 1;
-            animation: rise 0.6s cubic-bezier(0.22,1,0.36,1) both;
+            animation: importRise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        .upload-main .card { position: relative; z-index: 1; }
-
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(24px); }
-            to   { opacity: 1; transform: translateY(0); }
+        @keyframes importRise {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .brand {
-            text-align: center;
-            margin-bottom: 36px;
-            position: relative;
+        .import-brand {
+            margin-bottom: 32px;
         }
 
-        .brand-icon {
-            width: 56px; height: 56px;
-            background: linear-gradient(135deg, #F5C8D6, #E89BB5);
-            border-radius: 50%;
+        .import-brand-badge {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 24px;
         }
 
-        .brand h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 32px;
-            font-weight: 300;
-            color: #2A1A1F;
-            line-height: 1;
+        .import-brand-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 12px rgba(255, 46, 166, 0.5));
         }
 
-        .brand h1 em {
-            font-style: italic;
-            color: #A8324F;
+        .import-brand h1 {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: clamp(1.65rem, 4vw, 2rem);
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+            line-height: 1.15;
         }
 
-        .brand p {
-            font-size: 12.5px;
-            color: #7A4A5C;
-            margin-top: 8px;
-            letter-spacing: 0.04em;
+        .import-brand p {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.88);
+            margin-top: 10px;
+            line-height: 1.5;
+            max-width: 340px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        /* drop zone */
         .drop-zone {
             position: relative;
-            border: 2px dashed #E89BB5;
-            border-radius: 20px;
-            background: #FBE8EE;
-            padding: 40px 24px;
+            border: 2px dashed rgba(255, 182, 220, 0.55);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.22);
+            padding: 36px 24px 32px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 28px;
+            transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+            margin-bottom: 20px;
         }
 
-        .drop-zone:hover, .drop-zone.dragover {
-            border-color: #A8324F;
-            background: #F5C8D6;
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: rgba(255, 255, 255, 0.65);
+            background: rgba(0, 0, 0, 0.32);
+            box-shadow: 0 0 20px rgba(255, 46, 166, 0.25);
         }
 
         .drop-zone input[type="file"] {
@@ -139,121 +126,122 @@
             height: 100%;
         }
 
-        .drop-icon {
-            font-size: 36px;
-            margin-bottom: 12px;
+        .drop-folder-img {
+            width: 88px;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+            margin: 0 auto 14px;
             display: block;
+            pointer-events: none;
         }
 
         .drop-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 20px;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.35rem;
             font-weight: 600;
-            color: #2A1A1F;
-            margin-bottom: 6px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
         }
 
         .drop-sub {
-            font-size: 12px;
-            color: #8C6070;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 12.5px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.78);
         }
 
         .file-name {
+            font-family: 'Inter', system-ui, sans-serif;
             font-size: 12px;
-            color: #A8324F;
-            font-weight: 500;
-            margin-top: 12px;
+            color: #ff6bd6;
+            font-weight: 600;
+            margin-top: 14px;
             min-height: 18px;
-        }
-
-        .brokers {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 28px;
-        }
-
-        .broker-tag {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            background: #FEF8F0;
-            border: 1px solid #F0DFB8;
-            border-radius: 12px;
-            font-size: 12px;
-            color: #8C6070;
-        }
-
-        .broker-tag strong {
-            display: block;
-            font-size: 13px;
-            color: #2A1A1F;
-            margin-bottom: 2px;
         }
 
         .submit-btn {
             width: 100%;
-            background: #2A1A1F;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.05em;
+            background: #000000;
+            color: #ff2ea6;
+            border: 1px solid rgba(255, 46, 166, 0.35);
+            padding: 17px 20px;
+            border-radius: 14px;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 14px;
+            transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            margin-bottom: 18px;
         }
 
         .submit-btn:hover {
-            background: #A8324F;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(168,50,79,0.3);
+            color: #ff6bd6;
+            border-color: rgba(255, 107, 214, 0.55);
+            box-shadow: 0 0 20px rgba(255, 46, 166, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
         }
 
         .back-link {
             display: block;
             text-align: center;
+            font-family: 'Inter', system-ui, sans-serif;
             font-size: 12.5px;
-            color: #7A4A5C;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
-            transition: color 0.2s;
+            transition: color 0.2s ease;
         }
-        .back-link:hover { color: #A8324F; }
+
+        .back-link:hover {
+            color: #ffffff;
+        }
 
         .flash-msg {
             border-radius: 12px;
             padding: 14px 18px;
             margin-bottom: 20px;
+            font-family: 'Inter', system-ui, sans-serif;
             font-size: 13px;
             line-height: 1.45;
+            text-align: left;
         }
+
         .flash-msg.error {
-            background: #FDEAEA;
-            border: 1px solid #E07070;
-            color: #8B2020;
+            background: rgba(60, 20, 30, 0.85);
+            border: 1px solid rgba(255, 107, 122, 0.55);
+            color: #ffb3bc;
         }
+
         .flash-msg.warning {
-            background: #FFF8E6;
-            border: 1px solid #E0C46A;
-            color: #6B5A1A;
+            background: rgba(50, 40, 15, 0.85);
+            border: 1px solid rgba(255, 214, 102, 0.45);
+            color: #ffe8a8;
         }
+
         .flash-msg.success {
-            background: #E8F5E9;
-            border: 1px solid #4CAF50;
-            color: #2E7D32;
+            background: rgba(15, 45, 30, 0.85);
+            border: 1px solid rgba(125, 255, 179, 0.4);
+            color: #b8f5d0;
         }
     </style>
 </head>
 
-<body class="upload-shell">
+<body class="upload-shell page-neon-shell">
     {% include "partials/app_sidebar.html" %}
     <div class="upload-main">
-    <div class="card">
-        <div class="brand">
-            <div class="brand-icon">✦</div>
-            <h1>Import <em>Trades</em></h1>
+    <div class="import-card">
+        <div class="import-brand">
+            <div class="import-brand-badge">
+                <img src="{% static 'journal/star.png' %}" width="72" height="72" alt="">
+            </div>
+            <h1>Import Trades</h1>
             <p>Upload your broker CSV to populate the calendar</p>
         </div>
 
@@ -270,14 +258,14 @@
 
             <div class="drop-zone" id="dropZone">
                 <input type="file" name="file" id="fileInput" accept=".csv">
-                <span class="drop-icon">📂</span>
-                <div class="drop-title">Drop your CSV here</div>
-                <div class="drop-sub">or click to browse</div>
+                <img src="{% static 'journal/folder_icon.png' %}" alt="" class="drop-folder-img" width="96" height="96">
+                <div class="drop-title">Drop Your CSV Here</div>
+                <div class="drop-sub">or Click to Browse</div>
                 <div class="file-name" id="fileName"></div>
             </div>
 
             <button type="submit" class="submit-btn">Process &amp; Import</button>
-            <a href="{% url 'dashboard' %}" class="back-link">← Back to calendar</a>
+            <a href="{% url 'dashboard' %}" class="back-link">← Back to Calendar</a>
         </form>
     </div>
     </div>

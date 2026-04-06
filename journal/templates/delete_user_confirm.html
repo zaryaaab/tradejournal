@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,125 +7,98 @@
     <title>Delete User — Dana's Trading Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'journal/trading_sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_shell.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/neon_pages.css' %}">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --rose:       #A8324F;
-            --rose-light: #E89BB5;
-            --rose-pale:  #F5C8D6;
-            --cream:      #FEF8F0;
-            --ink:        #2A1A1F;
-            --ink-mid:    #7A4A5C;
-            --ink-soft:   #8C6070;
-        }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--cream);
-            min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            padding: 32px 24px;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            width: 600px; height: 600px;
-            top: -200px; left: -200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #E8839A 0%, transparent 65%);
-            opacity: 0.35;
-            pointer-events: none;
-        }
-
-        .card {
-            background: white;
-            border-radius: 28px;
-            padding: 44px 44px 36px;
-            width: 100%; max-width: 480px;
-            border: 1px solid var(--rose-light);
-            box-shadow: 0 24px 80px rgba(168,50,79,0.10);
-            position: relative; z-index: 1;
-            animation: rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        .page-neon-shell .neon-centered-wrap { max-width: 480px; margin: 0 auto; width: 100%; }
+        .page-neon-shell .delete-card {
             text-align: center;
+            padding: 40px 36px 32px;
+            animation: rise 0.45s ease both;
         }
-
         @keyframes rise {
-            from { opacity: 0; transform: translateY(22px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .warning-icon {
+        .page-neon-shell .warning-icon {
             width: 64px; height: 64px;
-            background: #FDEAEA;
+            background: rgba(255, 138, 154, 0.15);
+            border: 1px solid rgba(255, 138, 154, 0.35);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 28px;
             margin: 0 auto 20px;
         }
-
-        h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 30px; font-weight: 300; color: var(--ink);
+        .page-neon-shell .delete-card h1 {
+            font-family: var(--font-serif);
+            font-size: 1.75rem; font-weight: 300; color: #fff;
             margin-bottom: 10px;
         }
-        h1 em { font-style: italic; color: var(--rose); }
-
-        .user-box {
-            background: #FBE8EE;
-            border: 1px solid var(--rose-light);
+        .page-neon-shell .delete-card h1 em { font-style: italic; color: var(--neon-accent-soft); }
+        .page-neon-shell .delete-lead { font-size: 13px; color: var(--neon-text-secondary); margin-bottom: 0; }
+        .page-neon-shell .user-box {
+            background: rgba(58, 13, 63, 0.55);
+            border: 1px solid rgba(255, 46, 166, 0.4);
             border-radius: 14px;
             padding: 14px 20px;
             margin: 20px 0;
             text-align: left;
         }
-
-        .user-box-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .user-box-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--rose); font-weight: 600; }
-        .user-box-value { font-size: 13px; font-weight: 500; color: var(--ink); }
-
-        .warning-note {
-            font-size: 12px; color: var(--ink-soft);
+        .page-neon-shell .user-box-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .page-neon-shell .user-box-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+            color: var(--neon-accent-soft); font-weight: 600;
+        }
+        .page-neon-shell .user-box-value { font-size: 13px; font-weight: 500; color: #fff; }
+        .page-neon-shell .warning-note {
+            font-size: 12px; color: var(--neon-text-secondary);
             margin-bottom: 28px; line-height: 1.6;
         }
-
-        .warning-note strong { color: #B03030; }
-
-        .actions { display: flex; gap: 12px; }
-
-        .btn-cancel {
+        .page-neon-shell .warning-note strong { color: #ff8a9a; }
+        .page-neon-shell .delete-actions { display: flex; gap: 12px; }
+        .page-neon-shell .btn-cancel {
             flex: 1; padding: 13px;
             border-radius: 14px;
-            border: 1.5px solid var(--rose-light);
-            background: white; color: var(--ink-mid);
-            font-family: 'DM Sans', sans-serif;
+            border: 1px solid rgba(255, 46, 166, 0.45);
+            background: transparent;
+            color: var(--neon-text-secondary);
+            font-family: var(--font-sans);
             font-size: 13px; font-weight: 500;
             text-decoration: none;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
         }
-        .btn-cancel:hover { background: #FBE8EE; color: var(--rose); border-color: var(--rose); }
-
-        .btn-delete {
+        .page-neon-shell .btn-cancel:hover {
+            background: rgba(255, 46, 166, 0.12);
+            color: #fff;
+        }
+        .page-neon-shell .btn-delete {
             flex: 1; padding: 13px;
             border-radius: 14px;
-            background: #C0392B; color: white;
+            background: linear-gradient(135deg, #c0392b, #922b21);
+            color: white;
             border: none; cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 500;
-            transition: all 0.2s;
+            font-family: var(--font-sans);
+            font-size: 13px; font-weight: 600;
         }
-        .btn-delete:hover { background: #A93226; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(192,57,43,0.25); }
+        .page-neon-shell .btn-delete:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
-<body>
+<body class="page-neon-shell">
 
-<div class="card">
+{% include "partials/app_sidebar.html" %}
+
+<main class="main">
+<div class="neon-centered-wrap">
+<div class="card delete-card">
     <div class="warning-icon">🗑️</div>
 
     <h1>Delete <em>User</em></h1>
-    <p style="font-size:13px; color:var(--ink-soft); margin-bottom:0;">
+    <p class="delete-lead">
         This will permanently remove this user's login access.
     </p>
 
@@ -148,7 +122,7 @@
         Their uploads and trade data will remain in the system — only their login is removed.
     </p>
 
-    <div class="actions">
+    <div class="delete-actions">
         <a href="{% url 'user_management' %}" class="btn-cancel">← Cancel</a>
         <form method="POST" action="{% url 'delete_user' target_user.id %}" style="flex:1; display:flex;">
             {% csrf_token %}
@@ -156,6 +130,8 @@
         </form>
     </div>
 </div>
+</div>
+</main>
 
 </body>
 </html>
