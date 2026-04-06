@@ -72,6 +72,7 @@ TEMPLATES = [
 
                 # 👇 ADD THIS LINE
                 "journal.context_processors.user_role_context",
+                "journal.context_processors.trading_accounts_sidebar_context",
             ],
         },
     },

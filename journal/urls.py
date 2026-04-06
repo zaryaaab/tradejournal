@@ -12,13 +12,33 @@ urlpatterns = [
     # ── Core app ─────────────────────────────────────────────────────
     path("",                views.dashboard,  name="dashboard"),
     path("upload/",         views.upload_csv, name="upload_csv"),
+    path(
+        "select-trading-account/",
+        views.select_trading_account,
+        name="select_trading_account",
+    ),
     path("day/<str:date>/", views.day_view,   name="day_view"),
 
     # ── Analytics ────────────────────────────────────────────────────
     path("analytics/",      views.analytics,  name="analytics"),
 
     # ── Trading account management ───────────────────────────────────
-    path("account/<int:account_id>/delete/", views.delete_account, name="delete_account"),
+    path("accounts/", views.trading_accounts_list, name="trading_accounts_list"),
+    path(
+        "accounts/<int:account_id>/edit/",
+        views.edit_trading_account,
+        name="edit_trading_account",
+    ),
+    path(
+        "accounts/<int:account_id>/archive/",
+        views.archive_trading_account,
+        name="archive_trading_account",
+    ),
+    path(
+        "accounts/<int:account_id>/retire/",
+        views.retire_trading_account,
+        name="retire_trading_account",
+    ),
     path('change-password/', views.change_password, name='change_password'),
 
     # ── User management (admin only) ─────────────────────────────────
