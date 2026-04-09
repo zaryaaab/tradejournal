@@ -401,7 +401,7 @@
         <div class="dash-month-nav">
             <a href="?month={{ prev_month }}&year={{ prev_year }}">← Prev</a>
             <div class="dash-month-label">
-                01 / {% if month < 10 %}0{% endif %}{{ month }} / {{ year }}
+                {% if month < 10 %}0{% endif %}{{ month }} {{ year }}
             </div>
             <a href="?month={{ next_month }}&year={{ next_year }}">Next →</a>
         </div>

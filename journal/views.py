@@ -254,9 +254,11 @@ def dashboard(request):
     else:
         next_month, next_year = month + 1, year
 
+    month_name = calendar.month_name[month]
+
     context = {
         "month_days":      month_days,
-        "month":           month,
+        "month":           month_name,
         "year":            year,
         "prev_month":      prev_month,
         "prev_year":       prev_year,
@@ -568,6 +570,15 @@ def _get_or_create_import_account(request, owner, account_number: str, name: str
         .order_by("id")
         .first()
     )
+    # Performance CSV always uses account_number "performance" + name "Performance Import".
+    # If the account was renamed (different number) but the display name stayed the same,
+    # the number lookup misses and create() would hit the unique (owner, name) constraint.
+    if account is None and name:
+        account = (
+            TradingAccount.objects.filter(owner=owner, name=name.strip())
+            .order_by("id")
+            .first()
+        )
     if account is not None:
         if account.is_archived:
             return None, (
@@ -591,8 +602,9 @@ def _get_or_create_import_account(request, owner, account_number: str, name: str
         )
     except IntegrityError:
         return None, (
-            f'Could not create account for "{an}" — that name may already be in use '
-            "for another active account. Rename the existing account or fix the CSV."
+            f'Could not create account "{an}" — your workspace already has another active '
+            "trading account with the same display name (each name must be unique per owner). "
+            "Rename that account in Accounts / settings, or adjust the CSV."
         )
     return account, None
 
